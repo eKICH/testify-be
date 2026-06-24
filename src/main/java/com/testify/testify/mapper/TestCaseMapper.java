@@ -5,9 +5,10 @@ import com.testify.testify.dto.TestCaseResponse;
 import com.testify.testify.entity.TestCase;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface TestCaseMapper {
 
     TestCaseMapper INSTANCE = Mappers.getMapper(TestCaseMapper.class);

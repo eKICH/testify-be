@@ -5,9 +5,10 @@ import com.testify.testify.dto.TestRunResponse;
 import com.testify.testify.entity.TestRun;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
 
-@Mapper(componentModel = "spring", uses = UserMapper.class)
+@Mapper(componentModel = "spring", uses = UserMapper.class, unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface TestRunMapper {
 
     TestRunMapper INSTANCE = Mappers.getMapper(TestRunMapper.class);

@@ -40,6 +40,7 @@ class TestCaseServiceTest {
         request.setName("Test Case 1");
 
         when(userRepository.findById(any())).thenReturn(Optional.of(new User()));
+        when(testCaseMapper.toTestCase(any(TestCaseCreateRequest.class))).thenReturn(new TestCase());
         when(testCaseRepository.save(any())).thenReturn(new TestCase());
         when(testCaseMapper.toTestCaseResponse(any())).thenReturn(new TestCaseResponse());
 
