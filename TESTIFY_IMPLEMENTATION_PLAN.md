@@ -105,8 +105,233 @@ testify/
 │   ├── application.properties
 │   └── db/migration/           # Flyway migrations (optional)
 ├── src/test/
+├── Dockerfile                  # Docker container configuration
+├── .dockerignore               # Files to exclude from Docker
+├── docker-compose.yml          # Local development with Docker
 └── pom.xml
 ```
+
+### 1.3 Deployment
+
+This section outlines how to containerize and deploy the application using Docker, with specific instructions for local development and production deployment on Render.
+
+#### 1.3.1 Docker Configuration
+
+**`Dockerfile` (Multi-stage Build)**
+
+Create a `Dockerfile` in the project root. This file uses a multi-stage build to create a lean, production-ready container image.
+
+```dockerfile
+# Stage 1: Build the application
+FROM maven:3.8.1-openjdk-17-slim as builder
+
+WORKDIR /app
+
+# Copy only pom.xml to leverage Docker cache layers
+COPY pom.xml .
+
+# Download dependencies
+RUN mvn dependency:go-offline
+
+# Copy the rest of the source code
+COPY src/ src/
+
+# Build the application, skipping tests
+RUN mvn clean package -DskipTests
+
+# Stage 2: Create the runtime image
+FROM openjdk:17-slim
+
+WORKDIR /app
+
+# Copy the built JAR from the builder stage
+COPY --from=builder /app/target/testify-*.jar app.jar
+
+# Health check to ensure the application is running
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD java -cp app.jar org.springframework.boot.loader.JarLauncher -Dspring.boot.endpoint.health.path=/actuator/health || exit 1
+
+# Expose the application port
+EXPOSE 8080
+
+# Set the entrypoint to run the application
+ENTRYPOINT ["java", "-jar", "app.jar"]
+
+# Default command can be used to set profiles, but it's better to use environment variables
+CMD ["--spring.profiles.active=default"]
+```
+
+**`.dockerignore`**
+
+Create a `.dockerignore` file to exclude unnecessary files and directories from the Docker build context, which speeds up the build process.
+
+```
+# Build artifacts
+target/
+
+# Git files
+.git/
+.gitignore
+
+# Maven wrapper
+.mvn/
+mvnw
+mvnw.cmd
+
+# IDE and OS-specific files
+.DS_Store
+*.log
+.classpath
+.project
+.settings/
+.idea/
+*.iml
+```
+
+#### 1.3.2 Local Development with Docker Compose
+
+For local development, `docker-compose.yml` simplifies running the application alongside a PostgreSQL database.
+
+**`docker-compose.yml`**
+
+```yaml
+version: '3.8'
+
+services:
+  # PostgreSQL Database Service
+  postgres:
+    image: postgres:15-alpine
+    container_name: testify-db-local
+    environment:
+      POSTGRES_DB: testify
+      POSTGRES_USER: testify_user
+      POSTGRES_PASSWORD: testify_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U testify_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Testify Application Service
+  testify-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: testify-app-local
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/testify
+      SPRING_DATASOURCE_USERNAME: testify_user
+      SPRING_DATASOURCE_PASSWORD: testify_password
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop # Use create-drop for easy local development
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: java -jar app.jar --spring.profiles.active=docker
+
+volumes:
+  postgres_data:
+```
+
+**Running Locally**
+
+1.  **Build and Run:**
+    ```bash
+    docker-compose up -d --build
+    ```
+2.  **View Logs:**
+    ```bash
+    docker-compose logs -f testify-app
+    ```
+3.  **Stop Services:**
+    ```bash
+    docker-compose down
+    ```
+
+#### 1.3.3 Production Deployment on Render
+
+Render is a cloud platform that simplifies deployment. Here’s how to deploy the Testify application and a PostgreSQL database on Render.
+
+**1. Create a PostgreSQL Database on Render**
+
+*   Go to the Render Dashboard and create a new **PostgreSQL** instance.
+*   Note down the **Internal Connection URL**. This will be used to connect the application to the database.
+
+**2. Create a Web Service for the Testify App**
+
+*   In the Render Dashboard, create a new **Web Service**.
+*   Connect your GitHub/GitLab repository.
+*   Render will automatically detect the `Dockerfile` and build the image.
+*   Under **Environment Variables**, add the following:
+    *   `SPRING_DATASOURCE_URL`: The internal connection URL of your Render PostgreSQL database.
+    *   `SPRING_DATASOURCE_USERNAME`: The username for your Render database.
+    *   `SPRING_DATASOURCE_PASSWORD`: The password for your Render database.
+    *   `SPRING_PROFILES_ACTIVE`: `render` (to use `application-render.properties`).
+    *   `JWT_SECRET`: A strong, randomly generated secret for signing JWTs.
+
+**3. Configure `application-render.properties`**
+
+Create an `application-render.properties` file in `src/main/resources` for production settings.
+
+```properties
+# Server Configuration (Render sets the PORT automatically)
+server.port=${PORT:8080}
+
+# Database Configuration (Render provides these via environment variables)
+spring.datasource.url=${SPRING_DATASOURCE_URL}
+spring.datasource.username=${SPRING_DATASOURCE_USERNAME}
+spring.datasource.password=${SPRING_DATASOURCE_PASSWORD}
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# JPA Configuration
+spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.hibernate.ddl-auto=validate # Use 'validate' or 'none' in production
+spring.jpa.show-sql=false
+
+# JWT Configuration
+app.jwt.secret=${JWT_SECRET}
+app.jwt.expiration=86400000 # 24 hours
+
+# Logging Configuration
+logging.level.root=WARN
+logging.level.com.testify=INFO
+```
+
+**4. CI/CD with GitHub Actions (Optional)**
+
+To automate deployments, you can set up a GitHub Actions workflow to build and deploy the application to Render whenever you push to the `main` branch.
+
+Create `.github/workflows/deploy.yml`:
+
+```yaml
+name: Deploy to Render
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Trigger Render Deploy
+        uses: johnbeynon/render-deploy-action@v1
+        with:
+          service-id: ${{ secrets.RENDER_SERVICE_ID }}
+          api-key: ${{ secrets.RENDER_API_KEY }}
+```
+
+*   You'll need to add `RENDER_SERVICE_ID` and `RENDER_API_KEY` as secrets in your GitHub repository settings.
 
 ---
 
@@ -1130,27 +1355,29 @@ POST /api/v1/test-plans/{id}/export        - Export test plan with cases
 
 ---
 
-## 11. Configuration File Example (application.properties)
+## 11. Configuration File Examples
+
+### 11.1 application.properties (Default/Local Development)
 
 ```properties
 # Server Configuration
 server.port=8080
 server.servlet.context-path=/testify
 
-# Database Configuration
-spring.datasource.url=jdbc:mysql://localhost:3306/testify_db
-spring.datasource.username=root
-spring.datasource.password=password
-spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+# Database Configuration (PostgreSQL)
+spring.datasource.url=jdbc:postgresql://localhost:5432/testify
+spring.datasource.username=testify_user
+spring.datasource.password=testify_password
+spring.datasource.driver-class-name=org.postgresql.Driver
 
 # JPA Configuration
 spring.jpa.hibernate.ddl-auto=validate
 spring.jpa.show-sql=false
-spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQL10Dialect
 spring.jpa.properties.hibernate.format_sql=true
 
 # JWT Configuration
-app.jwt.secret=your-secret-key-here
+app.jwt.secret=your-secret-key-here-change-in-production
 app.jwt.expiration=86400000
 
 # Swagger Configuration
@@ -1160,6 +1387,83 @@ springdoc.swagger-ui.path=/swagger-ui.html
 # Logging Configuration
 logging.level.root=INFO
 logging.level.com.testify=DEBUG
+
+# Jackson Configuration
+spring.jackson.serialization.write-dates-as-timestamps=false
+spring.jackson.time-zone=UTC
+```
+
+### 11.2 application-docker.properties (Docker/docker-compose)
+
+```properties
+# Server Configuration
+server.port=8080
+
+# Database Configuration (Docker service name: postgres)
+spring.datasource.url=jdbc:postgresql://postgres:5432/testify
+spring.datasource.username=testify_user
+spring.datasource.password=testify_password
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# JPA Configuration
+spring.jpa.hibernate.ddl-auto=create-drop
+spring.jpa.show-sql=false
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQL10Dialect
+
+# JWT Configuration
+app.jwt.secret=${JWT_SECRET:docker-dev-secret-change-in-production}
+app.jwt.expiration=86400000
+
+# Swagger Configuration
+springdoc.api-docs.path=/v3/api-docs
+springdoc.swagger-ui.path=/swagger-ui.html
+
+# Logging Configuration
+logging.level.root=WARN
+logging.level.com.testify=INFO
+
+# Jackson Configuration
+spring.jackson.serialization.write-dates-as-timestamps=false
+spring.jackson.time-zone=UTC
+
+# Connection Pool
+spring.datasource.hikari.maximum-pool-size=5
+spring.datasource.hikari.minimum-idle=1
+```
+
+### 11.3 application-render.properties (Production on Render)
+
+```properties
+# Server Configuration
+server.port=${PORT:8080}
+
+# Database Configuration (Render PostgreSQL)
+spring.datasource.url=${SPRING_DATASOURCE_URL}
+spring.datasource.username=${SPRING_DATASOURCE_USERNAME}
+spring.datasource.password=${SPRING_DATASOURCE_PASSWORD}
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# JPA Configuration
+spring.jpa.database-platform=org.hibernate.dialect.PostgreSQL10Dialect
+spring.jpa.hibernate.ddl-auto=validate
+spring.jpa.show-sql=false
+
+# JWT Configuration
+app.jwt.secret=${JWT_SECRET}
+app.jwt.expiration=86400000
+
+# Swagger Configuration
+springdoc.api-docs.path=/v3/api-docs
+springdoc.swagger-ui.path=/swagger-ui.html
+
+# Logging Configuration
+logging.level.root=WARN
+logging.level.com.testify=INFO
+
+# Connection Pool
+spring.datasource.hikari.maximum-pool-size=5
+spring.datasource.hikari.minimum-idle=1
+spring.datasource.hikari.connection-timeout=20000
 
 # Jackson Configuration
 spring.jackson.serialization.write-dates-as-timestamps=false
