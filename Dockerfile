@@ -1,5 +1,6 @@
-# Stage 1: Build
-FROM maven:3.8.1-openjdk-17-slim as builder
+# Stage 1: Build the application
+# Use a modern Maven image based on Eclipse Temurin
+FROM maven:3.9.5-eclipse-temurin-17 as builder
 
 WORKDIR /app
 
@@ -9,29 +10,30 @@ COPY pom.xml .
 # Download dependencies
 RUN mvn dependency:go-offline
 
-# Copy source code
+# Copy the rest of the source code
 COPY src/ src/
 
-# Build application
+# Build the application, skipping tests
 RUN mvn clean package -DskipTests
 
-# Stage 2: Runtime
-FROM openjdk:17-slim
+# Stage 2: Create the runtime image
+# Use the official Eclipse Temurin JRE (Java Runtime Environment) image, which is smaller
+FROM eclipse-temurin:17-jre-slim
 
 WORKDIR /app
 
-# Copy built JAR from builder stage
+# Copy the built JAR from the builder stage
 COPY --from=builder /app/target/testify-*.jar app.jar
 
-# Health check
+# Health check to ensure the application is running
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD java -cp app.jar org.springframework.boot.loader.JarLauncher -Dspring.boot.endpoint.health.path=/actuator/health || exit 1
 
-# Expose port
+# Expose the application port
 EXPOSE 8080
 
-# Run application
+# Set the entrypoint to run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]
 
-# Default profile (can be overridden at runtime)
+# Default command can be used to set profiles, but it's better to use environment variables
 CMD ["--spring.profiles.active=default"]
