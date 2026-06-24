@@ -17,8 +17,8 @@ COPY src/ src/
 RUN mvn clean package -DskipTests
 
 # Stage 2: Create the runtime image
-# Use the official Eclipse Temurin JRE (Java Runtime Environment) image, which is smaller
-FROM eclipse-temurin:17-jre-slim
+# Use a common Eclipse Temurin JRE image. The 'jre' tag is more common than 'jre-slim'.
+FROM eclipse-temurin:17-jre
 
 WORKDIR /app
 
