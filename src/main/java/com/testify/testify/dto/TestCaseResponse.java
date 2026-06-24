@@ -1,0 +1,26 @@
+package com.testify.testify.dto;
+
+import com.testify.testify.entity.Priority;
+import com.testify.testify.entity.TestCaseStatus;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class TestCaseResponse {
+    private Long id;
+    private String name;
+    private String description;
+    private String preconditions;
+    private String steps;
+    private String expectedResult;
+    private Priority priority;
+    private TestCaseStatus status;
+    private UserDto createdBy;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+}
