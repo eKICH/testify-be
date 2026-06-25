@@ -15,8 +15,7 @@ COPY src/ src/
 RUN mvn clean package -DskipTests
 
 # --- Second Stage: Create the final image ---
-# Use the same image as the builder stage. This is not ideal for size,
-# but it guarantees that the image can be found by the build environment.
+# Use the same image as the builder stage to ensure it's found by the build environment.
 FROM maven:3.8.5-openjdk-17
 
 # Set the working directory
@@ -28,5 +27,6 @@ COPY --from=builder /app/target/testify-*.jar app.jar
 # Expose the port the app runs on
 EXPOSE 8080
 
-# Run the application. All configuration will be passed via environment variables.
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Run the application, explicitly setting the 'render' profile.
+# This is the most reliable way to ensure the correct properties are loaded.
+ENTRYPOINT ["java", "-jar", "app.jar", "--spring.profiles.active=render"]
