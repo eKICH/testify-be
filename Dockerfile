@@ -35,5 +35,5 @@ EXPOSE 8080
 # Set the entrypoint to run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]
 
-# Default command can be used to set profiles, but it's better to use environment variables
-CMD ["--spring.profiles.active=default"]
+# Set the active profile for the application
+CMD ["--spring.profiles.active=render"]
