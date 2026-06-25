@@ -17,26 +17,32 @@ import javax.sql.DataSource;
 @Profile("render")
 public class RenderDataSourceConfig {
 
-    // Inject the raw URL from Render's environment variable
-    @Value("${SPRING_DATASOURCE_URL}")
-    private String renderDatabaseUrl;
+    // Inject the deconstructed database credentials provided by Render.
+    // This is the most robust method, as it avoids URL parsing issues
+    // with special characters in passwords.
+    @Value("${DB_HOST}")
+    private String dbHost;
 
-    @Value("${SPRING_DATASOURCE_USERNAME}")
+    @Value("${DB_PORT}")
+    private String dbPort;
+
+    @Value("${DB_DATABASE}")
+    private String dbName;
+
+    @Value("${DB_USER}")
     private String username;
 
-    @Value("${SPRING_DATASOURCE_PASSWORD}")
+    @Value("${DB_PASSWORD}")
     private String password;
 
     @Bean
     public DataSource dataSource() {
-        // Construct the full, valid JDBC URL
-        String jdbcUrl = "jdbc:" + renderDatabaseUrl;
+        // Construct the JDBC URL from the clean, deconstructed parts.
+        String jdbcUrl = String.format("jdbc:postgresql://%s:%s/%s?ssl=true&sslmode=require",
+                dbHost, dbPort, dbName);
 
         return DataSourceBuilder.create()
                 .url(jdbcUrl)
-                // By setting the username and password explicitly, we instruct the
-                // DataSource to ignore any credentials embedded in the URL,
-                // which resolves parsing conflicts.
                 .username(username)
                 .password(password)
                 .driverClassName("org.postgresql.Driver")
