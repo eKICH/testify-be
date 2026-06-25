@@ -15,7 +15,7 @@ COPY src/ src/
 RUN mvn clean package -DskipTests
 
 # --- Second Stage: Create the final image ---
-FROM openjdk:17-jdk-slim
+FROM openjdk:17-slim
 
 # Set the working directory
 WORKDIR /app
