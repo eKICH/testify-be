@@ -1,4 +1,19 @@
+# This file is used by Render to define your infrastructure.
+# You can learn more about this file at https://render.com/docs/yaml-spec
+
 services:
+  # -----------------
+  # Database Service
+  # -----------------
+  - type: pserv
+    name: testify-db
+    env: postgres
+    plan: free
+    postgresMajorVersion: 14
+
+  # -----------------
+  # API Service
+  # -----------------
   - type: web
     name: testify-api
     env: java
@@ -9,3 +24,16 @@ services:
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: render
+      # Link the database to the API
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: testify-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: testify-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: testify-db
+          property: password
