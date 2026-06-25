@@ -30,10 +30,13 @@ public class RenderDataSourceConfig {
     @Bean
     public DataSource dataSource() {
         // Construct the full, valid JDBC URL
-        String jdbcUrl = "jdbc:" + renderDatabaseUrl + "?ssl=true&sslmode=require";
+        String jdbcUrl = "jdbc:" + renderDatabaseUrl;
 
         return DataSourceBuilder.create()
                 .url(jdbcUrl)
+                // By setting the username and password explicitly, we instruct the
+                // DataSource to ignore any credentials embedded in the URL,
+                // which resolves parsing conflicts.
                 .username(username)
                 .password(password)
                 .driverClassName("org.postgresql.Driver")
