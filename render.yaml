@@ -1,25 +1,20 @@
 # This file is used by Render to define your infrastructure.
 # You can learn more about this file at https://render.com/docs/yaml-spec
 
-# Define the database at the top level
 databases:
   - name: testify-db
     plan: free
     postgresMajorVersion: 14
 
-# Define the services at the top level
 services:
   - type: web
     name: testify-api
-    env: java
-    plan: free
-    buildCommand: "./mvnw clean package -DskipTests"
-    startCommand: "java -jar target/testify-*.jar"
+    runtime: docker # The key is 'runtime', not 'env'
+    # buildCommand and startCommand are handled by the Dockerfile
     healthCheckPath: /actuator/health
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: render
-      # Link the database to the API
       - key: SPRING_DATASOURCE_URL
         fromDatabase:
           name: testify-db
