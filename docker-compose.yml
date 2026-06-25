@@ -30,6 +30,9 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       # Provide the JWT secret for the application
       JWT_SECRET: "a-secure-secret-for-local-development"
+      # Pass database credentials to the application, matching application-docker.properties
+      DB_USERNAME: "testify_user"
+      DB_PASSWORD: "testify_password"
     depends_on:
       postgres:
         condition: service_healthy
