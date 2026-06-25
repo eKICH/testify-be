@@ -9,7 +9,9 @@ services:
     name: testify-db
     env: postgres
     plan: free
-    postgresMajorVersion: 14
+    # Correctly specify the PostgreSQL version
+    postgres:
+      majorVersion: 14
 
   # -----------------
   # API Service
