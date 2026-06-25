@@ -15,7 +15,9 @@ COPY src/ src/
 RUN mvn clean package -DskipTests
 
 # --- Second Stage: Create the final image ---
-FROM openjdk:17-slim
+# Use the same image as the builder stage. This is not ideal for size,
+# but it guarantees that the image can be found by the build environment.
+FROM maven:3.8.5-openjdk-17
 
 # Set the working directory
 WORKDIR /app
