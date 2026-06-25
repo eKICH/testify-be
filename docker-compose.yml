@@ -26,15 +26,13 @@ services:
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/testify
-      SPRING_DATASOURCE_USERNAME: testify_user
-      SPRING_DATASOURCE_PASSWORD: testify_password
+      # Activate the 'docker' profile to load application-docker.properties
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
+      # Provide the JWT secret for the application
+      JWT_SECRET: "a-secure-secret-for-local-development"
     depends_on:
       postgres:
         condition: service_healthy
-    command: java -jar app.jar --spring.profiles.active=docker
 
 volumes:
   postgres_data:
