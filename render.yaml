@@ -1,21 +1,14 @@
 # This file is used by Render to define your infrastructure.
 # You can learn more about this file at https://render.com/docs/yaml-spec
 
-services:
-  # -----------------
-  # Database Service
-  # -----------------
-  - type: pserv
-    name: testify-db
-    env: postgres
+# Define the database at the top level
+databases:
+  - name: testify-db
     plan: free
-    # Correctly specify the PostgreSQL version
-    postgres:
-      majorVersion: 14
+    postgresMajorVersion: 14
 
-  # -----------------
-  # API Service
-  # -----------------
+# Define the services at the top level
+services:
   - type: web
     name: testify-api
     env: java
