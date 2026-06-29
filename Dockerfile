@@ -1,32 +1,68 @@
-# Use a multi-stage build to create a lean final image
-FROM maven:3.8.5-openjdk-17 AS builder
+# Dockerfile optimized for Render.com deployment
+# Multi-stage build to minimize final image size
 
-# Set the working directory
-WORKDIR /app
+# ==========================================
+# Stage 1: Build Stage
+# ==========================================
+FROM maven:3.9-eclipse-temurin-17 AS builder
 
-# Copy the POM file and download dependencies
+WORKDIR /build
+
+# Copy pom.xml first for dependency caching
+# This layer is cached unless pom.xml changes
 COPY pom.xml .
-RUN mvn dependency:go-offline
 
-# Copy the source code
-COPY src/ src/
+# Download dependencies
+RUN mvn dependency:go-offline -B
 
-# Build the application JAR
-RUN mvn clean package -DskipTests
+# Copy source code
+COPY src ./src
 
-# --- Second Stage: Create the final image ---
-# Use the same image as the builder stage to ensure it's found by the build environment.
-FROM maven:3.8.5-openjdk-17
+# Build the application
+# -DskipTests: Skip tests for faster builds
+# -q: Quiet mode (less log output)
+RUN mvn clean package -DskipTests -q
 
-# Set the working directory
+# ==========================================
+# Stage 2: Runtime Stage
+# ==========================================
+# Use Alpine Linux for smaller image size (~400MB)
+FROM eclipse-temurin:17-jre-alpine
+
 WORKDIR /app
 
-# Copy the JAR from the builder stage
-COPY --from=builder /app/target/testify-*.jar app.jar
+# Install curl for health checks
+RUN apk add --no-cache curl
 
-# Expose the port the app runs on
+# Copy the built JAR from builder stage
+COPY --from=builder /build/target/testify-*.jar app.jar
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S spring && \
+    adduser -u 1001 -S spring -G spring
+
+# Switch to non-root user
+USER spring
+
+# Expose port (Render will use PORT environment variable)
 EXPOSE 8080
 
-# Run the application, explicitly setting the 'render' profile.
-# This is the most reliable way to ensure the correct properties are loaded.
-ENTRYPOINT ["java", "-jar", "app.jar", "--spring.profiles.active=render"]
+# Health check for Render
+# Render uses this to determine if service is healthy
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8080/testify/actuator/health || exit 1
+
+# JVM configuration optimized for Render's limited resources
+# -Xmx256m: Maximum heap size (Render free tier has limited memory)
+# -Xms128m: Initial heap size (reduces startup time)
+# -XX:+UseG1GC: Use G1 garbage collector (good for containers)
+# -XX:MaxGCPauseMillis=200: Target GC pause time
+# -XX:+UseStringDeduplication: Reduce string memory usage
+ENTRYPOINT ["java", \
+    "-Xmx256m", \
+    "-Xms128m", \
+    "-XX:+UseG1GC", \
+    "-XX:MaxGCPauseMillis=200", \
+    "-XX:+UseStringDeduplication", \
+    "-jar", \
+    "app.jar"]
