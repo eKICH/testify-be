@@ -4,7 +4,6 @@ import com.testify.testify.dto.TestRunCreateRequest;
 import com.testify.testify.dto.TestRunResponse;
 import com.testify.testify.entity.TestRunStatus;
 import com.testify.testify.service.TestRunService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -15,10 +14,13 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/test-runs")
-@RequiredArgsConstructor
 public class TestRunController {
 
     private final TestRunService testRunService;
+
+    public TestRunController(TestRunService testRunService) {
+        this.testRunService = testRunService;
+    }
 
     @PostMapping
     public ResponseEntity<TestRunResponse> createTestRun(@RequestBody TestRunCreateRequest request) {

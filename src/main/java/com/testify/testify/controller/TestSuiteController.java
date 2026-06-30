@@ -6,6 +6,7 @@ import com.testify.testify.entity.User;
 import com.testify.testify.exception.ResourceNotFoundException;
 import com.testify.testify.service.TestSuiteService;
 import com.testify.testify.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -18,21 +19,16 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/test-suites")
+@RequiredArgsConstructor
 public class TestSuiteController {
 
     private final TestSuiteService testSuiteService;
-    private final UserRepository userRepository; // Inject UserRepository
-
-    public TestSuiteController(TestSuiteService testSuiteService, UserRepository userRepository) {
-        this.testSuiteService = testSuiteService;
-        this.userRepository = userRepository;
-    }
+    private final UserRepository userRepository;
 
     @PostMapping
-    public ResponseEntity<TestSuiteResponse> createTestSuite(@RequestBody TestSuiteCreateRequest request) {
-        // TEMPORARY: Hardcode user for testing
-        User user = userRepository.findByUsername("user")
-                .orElseThrow(() -> new ResourceNotFoundException("Default user 'user' not found for testing"));
+    public ResponseEntity<TestSuiteResponse> createTestSuite(@RequestBody TestSuiteCreateRequest request, @AuthenticationPrincipal UserDetails userDetails) {
+        User user = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + userDetails.getUsername()));
         UUID userId = user.getId();
         TestSuiteResponse response = testSuiteService.createTestSuite(request, userId);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
@@ -52,7 +48,6 @@ public class TestSuiteController {
 
     @PutMapping("/{id}")
     public ResponseEntity<TestSuiteResponse> updateTestSuite(@PathVariable Long id, @RequestBody TestSuiteCreateRequest request, @AuthenticationPrincipal UserDetails userDetails) {
-        // Fetch the user by username from the security principal
         User user = userRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + userDetails.getUsername()));
         UUID userId = user.getId();
@@ -62,7 +57,6 @@ public class TestSuiteController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTestSuite(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
-        // Fetch the user by username from the security principal
         User user = userRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + userDetails.getUsername()));
         UUID userId = user.getId();
