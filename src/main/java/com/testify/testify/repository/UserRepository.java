@@ -6,9 +6,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User, UUID> {
     @Query("SELECT count(u) FROM User u WHERE u.createdAt >= :startOfDay")
     long countByCreatedAtAfter(LocalDateTime startOfDay);
 }

@@ -4,6 +4,7 @@ import com.testify.testify.dto.TestSuiteCreateRequest;
 import com.testify.testify.dto.TestSuiteResponse;
 import com.testify.testify.entity.TestSuite;
 import com.testify.testify.entity.User;
+import com.testify.testify.exception.ForbiddenAccessException;
 import com.testify.testify.exception.ResourceNotFoundException;
 import com.testify.testify.mapper.TestSuiteMapper;
 import com.testify.testify.repository.TestSuiteRepository;
@@ -12,6 +13,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +26,8 @@ public class TestSuiteServiceImpl implements TestSuiteService {
     private final TestSuiteMapper testSuiteMapper;
 
     @Override
-    public TestSuiteResponse createTestSuite(TestSuiteCreateRequest request, Long userId) {
+    @Transactional
+    public TestSuiteResponse createTestSuite(TestSuiteCreateRequest request, UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
@@ -34,6 +39,7 @@ public class TestSuiteServiceImpl implements TestSuiteService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public TestSuiteResponse getTestSuiteById(Long id) {
         TestSuite testSuite = testSuiteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Test Suite not found with id: " + id));
@@ -41,27 +47,37 @@ public class TestSuiteServiceImpl implements TestSuiteService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<TestSuiteResponse> getAllTestSuites(Pageable pageable) {
         return testSuiteRepository.findAll(pageable)
                 .map(testSuiteMapper::toTestSuiteResponse);
     }
 
     @Override
-    public TestSuiteResponse updateTestSuite(Long id, TestSuiteCreateRequest request, Long userId) {
+    @Transactional
+    public TestSuiteResponse updateTestSuite(Long id, TestSuiteCreateRequest request, UUID userId) {
         TestSuite testSuite = testSuiteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Test Suite not found with id: " + id));
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
+        // Authorization check: Ensure the user updating the suite is the one who created it.
+        if (!testSuite.getCreatedBy().getId().equals(userId)) {
+            throw new ForbiddenAccessException("You are not authorized to update this test suite.");
+        }
+
         testSuite.setName(request.getName());
         testSuite.setDescription(request.getDescription());
+        // Track who updated the entity
+        testSuite.setUpdatedBy(user);
 
         TestSuite updatedTestSuite = testSuiteRepository.save(testSuite);
         return testSuiteMapper.toTestSuiteResponse(updatedTestSuite);
     }
 
     @Override
+    @Transactional
     public void deleteTestSuite(Long id) {
         if (!testSuiteRepository.existsById(id)) {
             throw new ResourceNotFoundException("Test Suite not found with id: " + id);
