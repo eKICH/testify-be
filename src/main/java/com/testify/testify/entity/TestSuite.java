@@ -38,7 +38,7 @@ public class TestSuite {
     @JoinColumn(name = "updated_by")
     private User updatedBy;
 
-    @OneToMany(mappedBy = "testSuite", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "testSuite", cascade = CascadeType.ALL, orphanRemoval = true)
     private final Set<TestCase> testCases = new HashSet<>();
 
     @CreationTimestamp

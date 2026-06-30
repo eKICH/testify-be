@@ -3,12 +3,14 @@ package com.testify.testify.dto;
 import com.testify.testify.entity.Priority;
 import com.testify.testify.entity.TestCaseStatus;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class TestCaseResponse {
