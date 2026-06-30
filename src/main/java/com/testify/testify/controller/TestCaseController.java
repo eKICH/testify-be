@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/test-cases")
@@ -22,7 +23,7 @@ public class TestCaseController {
     @PostMapping
     public ResponseEntity<TestCaseResponse> createTestCase(@RequestBody TestCaseCreateRequest request) {
         // Assuming the user ID is retrieved from the security context
-        Long userId = 1L; // Placeholder
+        UUID userId = UUID.randomUUID(); // Placeholder
         TestCaseResponse response = testCaseService.createTestCase(request, userId);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -30,7 +31,7 @@ public class TestCaseController {
     @PostMapping("/bulk-create")
     public ResponseEntity<List<TestCaseResponse>> createBulkTestCases(@RequestBody List<TestCaseCreateRequest> requests) {
         // Assuming the user ID is retrieved from the security context
-        Long userId = 1L; // Placeholder
+        UUID userId = UUID.randomUUID(); // Placeholder
         List<TestCaseResponse> responses = testCaseService.createBulkTestCases(requests, userId);
         return new ResponseEntity<>(responses, HttpStatus.CREATED);
     }
@@ -50,14 +51,16 @@ public class TestCaseController {
     @PutMapping("/{id}")
     public ResponseEntity<TestCaseResponse> updateTestCase(@PathVariable Long id, @RequestBody TestCaseCreateRequest request) {
         // Assuming the user ID is retrieved from the security context
-        Long userId = 1L; // Placeholder
+        UUID userId = UUID.randomUUID(); // Placeholder
         TestCaseResponse response = testCaseService.updateTestCase(id, request, userId);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTestCase(@PathVariable Long id) {
-        testCaseService.deleteTestCase(id);
+        // Assuming the user ID is retrieved from the security context
+        UUID userId = UUID.randomUUID(); // Placeholder
+        testCaseService.deleteTestCase(id, userId);
         return ResponseEntity.noContent().build();
     }
 

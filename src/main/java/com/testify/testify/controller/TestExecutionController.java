@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/v1/test-executions")
 @RequiredArgsConstructor
@@ -20,7 +22,7 @@ public class TestExecutionController {
     @PostMapping("/run/{testRunId}")
     public ResponseEntity<TestExecutionResponse> recordTestExecution(@PathVariable Long testRunId, @RequestBody TestExecutionRequest request) {
         // Assuming the user ID is retrieved from the security context
-        Long userId = 1L; // Placeholder
+        UUID userId = UUID.randomUUID(); // Placeholder
         TestExecutionResponse response = testExecutionService.recordTestExecution(testRunId, request, userId);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -28,7 +30,7 @@ public class TestExecutionController {
     @PutMapping("/{id}")
     public ResponseEntity<TestExecutionResponse> updateTestExecution(@PathVariable Long id, @RequestBody TestExecutionRequest request) {
         // Assuming the user ID is retrieved from the security context
-        Long userId = 1L; // Placeholder
+        UUID userId = UUID.randomUUID(); // Placeholder
         TestExecutionResponse response = testExecutionService.updateTestExecution(id, request, userId);
         return ResponseEntity.ok(response);
     }

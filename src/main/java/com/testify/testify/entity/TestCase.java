@@ -55,4 +55,32 @@ public class TestCase {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    // Explicit Getters and Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+    public String getPreconditions() { return preconditions; }
+    public void setPreconditions(String preconditions) { this.preconditions = preconditions; }
+    public String getSteps() { return steps; }
+    public void setSteps(String steps) { this.steps = steps; }
+    public String getExpectedResult() { return expectedResult; }
+    public void setExpectedResult(String expectedResult) { this.expectedResult = expectedResult; }
+    public Priority getPriority() { return priority; }
+    public void setPriority(Priority priority) { this.priority = priority; }
+    public TestCaseStatus getStatus() { return status; }
+    public void setStatus(TestCaseStatus status) { this.status = status; }
+    public TestSuite getTestSuite() { return testSuite; }
+    public void setTestSuite(TestSuite testSuite) { this.testSuite = testSuite; }
+    public User getCreatedBy() { return createdBy; }
+    public void setCreatedBy(User createdBy) { this.createdBy = createdBy; }
+    public Set<TestPlan> getTestPlans() { return testPlans; }
+    public void setTestPlans(Set<TestPlan> testPlans) { this.testPlans = testPlans; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }

@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/v1/test-plans")
 @RequiredArgsConstructor
@@ -21,7 +23,7 @@ public class TestPlanController {
     @PostMapping
     public ResponseEntity<TestPlanResponse> createTestPlan(@RequestBody TestPlanCreateRequest request) {
         // Assuming the user ID is retrieved from the security context
-        Long userId = 1L; // Placeholder
+        UUID userId = UUID.randomUUID(); // Placeholder
         TestPlanResponse response = testPlanService.createTestPlan(request, userId);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -41,26 +43,32 @@ public class TestPlanController {
     @PutMapping("/{id}")
     public ResponseEntity<TestPlanResponse> updateTestPlan(@PathVariable Long id, @RequestBody TestPlanCreateRequest request) {
         // Assuming the user ID is retrieved from the security context
-        Long userId = 1L; // Placeholder
+        UUID userId = UUID.randomUUID(); // Placeholder
         TestPlanResponse response = testPlanService.updateTestPlan(id, request, userId);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTestPlan(@PathVariable Long id) {
-        testPlanService.deleteTestPlan(id);
+        // Assuming the user ID is retrieved from the security context
+        UUID userId = UUID.randomUUID(); // Placeholder
+        testPlanService.deleteTestPlan(id, userId);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/test-cases/{caseId}")
     public ResponseEntity<Void> addTestCaseToTestPlan(@PathVariable Long id, @PathVariable Long caseId) {
-        testPlanService.addTestCaseToTestPlan(id, caseId);
+        // Assuming the user ID is retrieved from the security context
+        UUID userId = UUID.randomUUID(); // Placeholder
+        testPlanService.addTestCaseToTestPlan(id, caseId, userId);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}/test-cases/{caseId}")
     public ResponseEntity<Void> removeTestCaseFromTestPlan(@PathVariable Long id, @PathVariable Long caseId) {
-        testPlanService.removeTestCaseFromTestPlan(id, caseId);
+        // Assuming the user ID is retrieved from the security context
+        UUID userId = UUID.randomUUID(); // Placeholder
+        testPlanService.removeTestCaseFromTestPlan(id, caseId, userId);
         return ResponseEntity.noContent().build();
     }
 

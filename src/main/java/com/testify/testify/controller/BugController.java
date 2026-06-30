@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/v1/bugs")
 @RequiredArgsConstructor
@@ -21,7 +23,7 @@ public class BugController {
     @PostMapping
     public ResponseEntity<BugResponse> createBug(@RequestBody BugCreateRequest request) {
         // Assuming the user ID is retrieved from the security context
-        Long userId = 1L; // Placeholder
+        UUID userId = UUID.randomUUID(); // Placeholder
         BugResponse response = bugService.createBug(request, userId);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -41,7 +43,7 @@ public class BugController {
     @PutMapping("/{id}")
     public ResponseEntity<BugResponse> updateBug(@PathVariable Long id, @RequestBody BugCreateRequest request) {
         // Assuming the user ID is retrieved from the security context
-        Long userId = 1L; // Placeholder
+        UUID userId = UUID.randomUUID(); // Placeholder
         BugResponse response = bugService.updateBug(id, request, userId);
         return ResponseEntity.ok(response);
     }
@@ -53,13 +55,14 @@ public class BugController {
     }
 
     @PutMapping("/{id}/status")
-    public ResponseEntity<BugResponse> updateBugStatus(@PathVariable Long id, @RequestBody BugStatus status) {
-        BugResponse response = bugService.updateBugStatus(id, status);
+    public ResponseEntity<BugResponse> updateBugStatus(@PathVariable Long id, @RequestBody String status) {
+        BugStatus bugStatus = BugStatus.valueOf(status.toUpperCase());
+        BugResponse response = bugService.updateBugStatus(id, bugStatus);
         return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}/assign/{assigneeId}")
-    public ResponseEntity<BugResponse> assignBug(@PathVariable Long id, @PathVariable Long assigneeId) {
+    public ResponseEntity<BugResponse> assignBug(@PathVariable Long id, @PathVariable UUID assigneeId) {
         BugResponse response = bugService.assignBug(id, assigneeId);
         return ResponseEntity.ok(response);
     }

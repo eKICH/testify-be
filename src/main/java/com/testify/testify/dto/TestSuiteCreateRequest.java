@@ -13,4 +13,13 @@ public class TestSuiteCreateRequest {
     private String name;
 
     private String description;
+
+    // Explicit Getters
+    public String getName() {
+        return name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
 }

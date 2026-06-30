@@ -20,4 +20,11 @@ public class TestRunCreateRequest {
 
     private String buildVersion;
     private String environment;
+
+    // Explicit Getters
+    public String getName() { return name; }
+    public String getDescription() { return description; }
+    public Long getTestPlanId() { return testPlanId; }
+    public String getBuildVersion() { return buildVersion; }
+    public String getEnvironment() { return environment; }
 }

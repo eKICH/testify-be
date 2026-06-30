@@ -23,4 +23,13 @@ public class TestCaseCreateRequest {
     private Priority priority;
 
     private Long testSuiteId;
+
+    // Explicit Getters
+    public String getName() { return name; }
+    public String getDescription() { return description; }
+    public String getPreconditions() { return preconditions; }
+    public String getSteps() { return steps; }
+    public String getExpectedResult() { return expectedResult; }
+    public Priority getPriority() { return priority; }
+    public Long getTestSuiteId() { return testSuiteId; }
 }

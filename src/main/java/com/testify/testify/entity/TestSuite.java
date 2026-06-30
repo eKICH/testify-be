@@ -39,11 +39,29 @@ public class TestSuite {
     private User updatedBy;
 
     @OneToMany(mappedBy = "testSuite", cascade = CascadeType.ALL, orphanRemoval = true)
-    private final Set<TestCase> testCases = new HashSet<>();
+    private Set<TestCase> testCases = new HashSet<>();
 
     @CreationTimestamp
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    // Explicit Getters and Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+    public User getCreatedBy() { return createdBy; }
+    public void setCreatedBy(User createdBy) { this.createdBy = createdBy; }
+    public User getUpdatedBy() { return updatedBy; }
+    public void setUpdatedBy(User updatedBy) { this.updatedBy = updatedBy; }
+    public Set<TestCase> getTestCases() { return testCases; }
+    public void setTestCases(Set<TestCase> testCases) { this.testCases = testCases; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }

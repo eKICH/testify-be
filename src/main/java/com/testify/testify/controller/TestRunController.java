@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/v1/test-runs")
 @RequiredArgsConstructor
@@ -21,7 +23,7 @@ public class TestRunController {
     @PostMapping
     public ResponseEntity<TestRunResponse> createTestRun(@RequestBody TestRunCreateRequest request) {
         // Assuming the user ID is retrieved from the security context
-        Long userId = 1L; // Placeholder
+        UUID userId = UUID.randomUUID(); // Placeholder
         TestRunResponse response = testRunService.createTestRun(request, userId);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -41,7 +43,7 @@ public class TestRunController {
     @PutMapping("/{id}")
     public ResponseEntity<TestRunResponse> updateTestRun(@PathVariable Long id, @RequestBody TestRunCreateRequest request) {
         // Assuming the user ID is retrieved from the security context
-        Long userId = 1L; // Placeholder
+        UUID userId = UUID.randomUUID(); // Placeholder
         TestRunResponse response = testRunService.updateTestRun(id, request, userId);
         return ResponseEntity.ok(response);
     }
@@ -53,8 +55,9 @@ public class TestRunController {
     }
 
     @PutMapping("/{id}/status")
-    public ResponseEntity<TestRunResponse> updateTestRunStatus(@PathVariable Long id, @RequestBody TestRunStatus status) {
-        TestRunResponse response = testRunService.updateTestRunStatus(id, status);
+    public ResponseEntity<TestRunResponse> updateTestRunStatus(@PathVariable Long id, @RequestBody String status) {
+        TestRunStatus runStatus = TestRunStatus.valueOf(status.toUpperCase());
+        TestRunResponse response = testRunService.updateTestRunStatus(id, runStatus);
         return ResponseEntity.ok(response);
     }
 

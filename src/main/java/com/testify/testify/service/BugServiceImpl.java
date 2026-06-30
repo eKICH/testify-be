@@ -1,6 +1,7 @@
 package com.testify.testify.service;
 
 import com.testify.testify.dto.BugCreateRequest;
+import com.testify.testify.exception.ForbiddenAccessException;
 import com.testify.testify.dto.BugResponse;
 import com.testify.testify.entity.*;
 import com.testify.testify.exception.ResourceNotFoundException;
@@ -9,13 +10,14 @@ import com.testify.testify.repository.BugRepository;
 import com.testify.testify.repository.TestCaseRepository;
 import com.testify.testify.repository.TestRunRepository;
 import com.testify.testify.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class BugServiceImpl implements BugService {
 
     private final BugRepository bugRepository;
@@ -24,8 +26,17 @@ public class BugServiceImpl implements BugService {
     private final TestRunRepository testRunRepository;
     private final BugMapper bugMapper;
 
+    public BugServiceImpl(BugRepository bugRepository, UserRepository userRepository, TestCaseRepository testCaseRepository, TestRunRepository testRunRepository, BugMapper bugMapper) {
+        this.bugRepository = bugRepository;
+        this.userRepository = userRepository;
+        this.testCaseRepository = testCaseRepository;
+        this.testRunRepository = testRunRepository;
+        this.bugMapper = bugMapper;
+    }
+
     @Override
-    public BugResponse createBug(BugCreateRequest request, Long userId) {
+    @Transactional
+    public BugResponse createBug(BugCreateRequest request, UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
@@ -51,6 +62,7 @@ public class BugServiceImpl implements BugService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BugResponse getBugById(Long id) {
         Bug bug = bugRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Bug not found with id: " + id));
@@ -58,18 +70,25 @@ public class BugServiceImpl implements BugService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<BugResponse> getAllBugs(Pageable pageable) {
         return bugRepository.findAll(pageable)
                 .map(bugMapper::toBugResponse);
     }
 
     @Override
-    public BugResponse updateBug(Long id, BugCreateRequest request, Long userId) {
+    @Transactional
+    public BugResponse updateBug(Long id, BugCreateRequest request, UUID userId) {
         Bug bug = bugRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Bug not found with id: " + id));
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+
+        // Authorization check: Ensure the user updating the bug is the one who reported it.
+        if (!bug.getReportedBy().getId().equals(userId)) {
+            throw new ForbiddenAccessException("You are not authorized to update this bug.");
+        }
 
         TestCase testCase = null;
         if (request.getTestCaseId() != null) {
@@ -99,6 +118,7 @@ public class BugServiceImpl implements BugService {
     }
 
     @Override
+    @Transactional
     public void deleteBug(Long id) {
         if (!bugRepository.existsById(id)) {
             throw new ResourceNotFoundException("Bug not found with id: " + id);
@@ -107,6 +127,7 @@ public class BugServiceImpl implements BugService {
     }
 
     @Override
+    @Transactional
     public BugResponse updateBugStatus(Long id, BugStatus status) {
         Bug bug = bugRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Bug not found with id: " + id));
@@ -116,7 +137,8 @@ public class BugServiceImpl implements BugService {
     }
 
     @Override
-    public BugResponse assignBug(Long id, Long assigneeId) {
+    @Transactional
+    public BugResponse assignBug(Long id, UUID assigneeId) {
         Bug bug = bugRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Bug not found with id: " + id));
         User assignee = userRepository.findById(assigneeId)
@@ -127,18 +149,20 @@ public class BugServiceImpl implements BugService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<BugResponse> getBugsByTestRun(Long runId, Pageable pageable) {
         TestRun testRun = testRunRepository.findById(runId)
                 .orElseThrow(() -> new ResourceNotFoundException("Test Run not found with id: " + runId));
-        return bugRepository.findAll(pageable)
+        return bugRepository.findByTestRun(testRun, pageable)
                 .map(bugMapper::toBugResponse);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<BugResponse> getBugsByTestCase(Long caseId, Pageable pageable) {
         TestCase testCase = testCaseRepository.findById(caseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Test Case not found with id: " + caseId));
-        return bugRepository.findAll(pageable)
+        return bugRepository.findByTestCase(testCase, pageable)
                 .map(bugMapper::toBugResponse);
     }
 }

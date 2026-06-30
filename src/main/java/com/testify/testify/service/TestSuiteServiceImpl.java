@@ -9,7 +9,6 @@ import com.testify.testify.exception.ResourceNotFoundException;
 import com.testify.testify.mapper.TestSuiteMapper;
 import com.testify.testify.repository.TestSuiteRepository;
 import com.testify.testify.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -18,12 +17,17 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class TestSuiteServiceImpl implements TestSuiteService {
 
     private final TestSuiteRepository testSuiteRepository;
     private final UserRepository userRepository;
     private final TestSuiteMapper testSuiteMapper;
+
+    public TestSuiteServiceImpl(TestSuiteRepository testSuiteRepository, UserRepository userRepository, TestSuiteMapper testSuiteMapper) {
+        this.testSuiteRepository = testSuiteRepository;
+        this.userRepository = userRepository;
+        this.testSuiteMapper = testSuiteMapper;
+    }
 
     @Override
     @Transactional
@@ -78,10 +82,15 @@ public class TestSuiteServiceImpl implements TestSuiteService {
 
     @Override
     @Transactional
-    public void deleteTestSuite(Long id) {
-        if (!testSuiteRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Test Suite not found with id: " + id);
+    public void deleteTestSuite(Long id, UUID userId) {
+        TestSuite testSuite = testSuiteRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Test Suite not found with id: " + id));
+
+        // Authorization check: Ensure the user deleting the suite is the one who created it.
+        if (!testSuite.getCreatedBy().getId().equals(userId)) {
+            throw new ForbiddenAccessException("You are not authorized to delete this test suite.");
         }
+
         testSuiteRepository.deleteById(id);
     }
 }

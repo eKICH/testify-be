@@ -64,4 +64,44 @@ public class Bug {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    // Explicit Getters and Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+    public Severity getSeverity() { return severity; }
+    public void setSeverity(Severity severity) { this.severity = severity; }
+    public Priority getPriority() { return priority; }
+    public void setPriority(Priority priority) { this.priority = priority; }
+    public BugStatus getStatus() { return status; }
+    public void setStatus(BugStatus status) { this.status = status; }
+    public String getStepsToReproduce() { return stepsToReproduce; }
+    public void setStepsToReproduce(String stepsToReproduce) { this.stepsToReproduce = stepsToReproduce; }
+    public String getExpectedBehavior() { return expectedBehavior; }
+    public void setExpectedBehavior(String expectedBehavior) { this.expectedBehavior = expectedBehavior; }
+    public String getActualBehavior() { return actualBehavior; }
+    public void setActualBehavior(String actualBehavior) { this.actualBehavior = actualBehavior; }
+    public String getResolution() { return resolution; }
+    public void setResolution(String resolution) { this.resolution = resolution; }
+    public String getEnvironment() { return environment; }
+    public void setEnvironment(String environment) { this.environment = environment; }
+    public LocalDate getTargetFixDate() { return targetFixDate; }
+    public void setTargetFixDate(LocalDate targetFixDate) { this.targetFixDate = targetFixDate; }
+    public LocalDate getResolvedDate() { return resolvedDate; }
+    public void setResolvedDate(LocalDate resolvedDate) { this.resolvedDate = resolvedDate; }
+    public TestCase getTestCase() { return testCase; }
+    public void setTestCase(TestCase testCase) { this.testCase = testCase; }
+    public TestRun getTestRun() { return testRun; }
+    public void setTestRun(TestRun testRun) { this.testRun = testRun; }
+    public User getAssignedTo() { return assignedTo; }
+    public void setAssignedTo(User assignedTo) { this.assignedTo = assignedTo; }
+    public User getReportedBy() { return reportedBy; }
+    public void setReportedBy(User reportedBy) { this.reportedBy = reportedBy; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }

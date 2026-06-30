@@ -30,4 +30,16 @@ public class BugCreateRequest {
 
     private Long testCaseId;
     private Long testRunId;
+
+    // Explicit Getters
+    public String getTitle() { return title; }
+    public String getDescription() { return description; }
+    public Severity getSeverity() { return severity; }
+    public Priority getPriority() { return priority; }
+    public String getStepsToReproduce() { return stepsToReproduce; }
+    public String getExpectedBehavior() { return expectedBehavior; }
+    public String getActualBehavior() { return actualBehavior; }
+    public String getEnvironment() { return environment; }
+    public Long getTestCaseId() { return testCaseId; }
+    public Long getTestRunId() { return testRunId; }
 }

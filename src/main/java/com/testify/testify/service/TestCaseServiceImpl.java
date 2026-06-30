@@ -4,22 +4,23 @@ import com.testify.testify.dto.TestCaseCreateRequest;
 import com.testify.testify.dto.TestCaseResponse;
 import com.testify.testify.entity.TestCase;
 import com.testify.testify.entity.TestSuite;
+import com.testify.testify.exception.ForbiddenAccessException;
 import com.testify.testify.entity.User;
 import com.testify.testify.exception.ResourceNotFoundException;
 import com.testify.testify.mapper.TestCaseMapper;
 import com.testify.testify.repository.TestCaseRepository;
 import com.testify.testify.repository.TestSuiteRepository;
 import com.testify.testify.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class TestCaseServiceImpl implements TestCaseService {
 
     private final TestCaseRepository testCaseRepository;
@@ -27,8 +28,16 @@ public class TestCaseServiceImpl implements TestCaseService {
     private final TestSuiteRepository testSuiteRepository;
     private final TestCaseMapper testCaseMapper;
 
+    public TestCaseServiceImpl(TestCaseRepository testCaseRepository, UserRepository userRepository, TestSuiteRepository testSuiteRepository, TestCaseMapper testCaseMapper) {
+        this.testCaseRepository = testCaseRepository;
+        this.userRepository = userRepository;
+        this.testSuiteRepository = testSuiteRepository;
+        this.testCaseMapper = testCaseMapper;
+    }
+
     @Override
-    public TestCaseResponse createTestCase(TestCaseCreateRequest request, Long userId) {
+    @Transactional
+    public TestCaseResponse createTestCase(TestCaseCreateRequest request, UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
@@ -47,21 +56,25 @@ public class TestCaseServiceImpl implements TestCaseService {
     }
 
     @Override
-    public List<TestCaseResponse> createBulkTestCases(List<TestCaseCreateRequest> requests, Long userId) {
+    @Transactional
+    public List<TestCaseResponse> createBulkTestCases(List<TestCaseCreateRequest> requests, UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
-
+        
+        // Optimization: If all test cases belong to the same suite, fetch it only once.
+        // This assumes the requests list is not empty and all items have the same testSuiteId.
+        TestSuite testSuite = null;
+        if (requests != null && !requests.isEmpty() && requests.get(0).getTestSuiteId() != null) {
+            testSuite = testSuiteRepository.findById(requests.get(0).getTestSuiteId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Test Suite not found with id: " + requests.get(0).getTestSuiteId()));
+        }
+        
+        final TestSuite finalTestSuite = testSuite; // Effective final for use in lambda
         List<TestCase> testCases = requests.stream()
                 .map(request -> {
-                    TestSuite testSuite = null;
-                    if (request.getTestSuiteId() != null) {
-                        testSuite = testSuiteRepository.findById(request.getTestSuiteId())
-                                .orElseThrow(() -> new ResourceNotFoundException("Test Suite not found with id: " + request.getTestSuiteId()));
-                    }
-
                     TestCase testCase = testCaseMapper.toTestCase(request);
                     testCase.setCreatedBy(user);
-                    testCase.setTestSuite(testSuite);
+                    testCase.setTestSuite(finalTestSuite);
                     return testCase;
                 })
                 .collect(Collectors.toList());
@@ -73,6 +86,7 @@ public class TestCaseServiceImpl implements TestCaseService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public TestCaseResponse getTestCaseById(Long id) {
         TestCase testCase = testCaseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Test Case not found with id: " + id));
@@ -80,26 +94,34 @@ public class TestCaseServiceImpl implements TestCaseService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<TestCaseResponse> getAllTestCases(Pageable pageable) {
         return testCaseRepository.findAll(pageable)
                 .map(testCaseMapper::toTestCaseResponse);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<TestCaseResponse> getTestCasesByTestSuite(Long suiteId, Pageable pageable) {
         TestSuite testSuite = testSuiteRepository.findById(suiteId)
                 .orElseThrow(() -> new ResourceNotFoundException("Test Suite not found with id: " + suiteId));
-        return testCaseRepository.findAll(pageable)
+        return testCaseRepository.findByTestSuite(testSuite, pageable)
                 .map(testCaseMapper::toTestCaseResponse);
     }
 
     @Override
-    public TestCaseResponse updateTestCase(Long id, TestCaseCreateRequest request, Long userId) {
+    @Transactional
+    public TestCaseResponse updateTestCase(Long id, TestCaseCreateRequest request, UUID userId) {
         TestCase testCase = testCaseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Test Case not found with id: " + id));
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+
+        // Authorization check: Ensure the user updating the case is the one who created it.
+        if (!testCase.getCreatedBy().getId().equals(userId)) {
+            throw new ForbiddenAccessException("You are not authorized to update this test case.");
+        }
 
         TestSuite testSuite = null;
         if (request.getTestSuiteId() != null) {
@@ -120,10 +142,16 @@ public class TestCaseServiceImpl implements TestCaseService {
     }
 
     @Override
-    public void deleteTestCase(Long id) {
-        if (!testCaseRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Test Case not found with id: " + id);
+    @Transactional
+    public void deleteTestCase(Long id, UUID userId) {
+        TestCase testCase = testCaseRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Test Case not found with id: " + id));
+
+        // Authorization check: Ensure the user deleting the case is the one who created it.
+        if (!testCase.getCreatedBy().getId().equals(userId)) {
+            throw new ForbiddenAccessException("You are not authorized to delete this test case.");
         }
-        testCaseRepository.deleteById(id);
+
+        testCaseRepository.delete(testCase);
     }
 }

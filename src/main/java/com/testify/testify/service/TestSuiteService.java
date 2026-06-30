@@ -12,5 +12,5 @@ public interface TestSuiteService {
     TestSuiteResponse getTestSuiteById(Long id);
     Page<TestSuiteResponse> getAllTestSuites(Pageable pageable);
     TestSuiteResponse updateTestSuite(Long id, TestSuiteCreateRequest request, UUID userId);
-    void deleteTestSuite(Long id);
+    void deleteTestSuite(Long id, UUID userId);
 }

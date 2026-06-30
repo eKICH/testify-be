@@ -18,4 +18,11 @@ public class TestPlanCreateRequest {
     private String scope;
     private LocalDate startDate;
     private LocalDate endDate;
+
+    // Explicit Getters
+    public String getName() { return name; }
+    public String getDescription() { return description; }
+    public String getScope() { return scope; }
+    public LocalDate getStartDate() { return startDate; }
+    public LocalDate getEndDate() { return endDate; }
 }

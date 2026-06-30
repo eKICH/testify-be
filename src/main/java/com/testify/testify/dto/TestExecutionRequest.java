@@ -18,4 +18,10 @@ public class TestExecutionRequest {
 
     private String actualResult;
     private String comments;
+
+    // Explicit Getters
+    public Long getTestCaseId() { return testCaseId; }
+    public ExecutionStatus getStatus() { return status; }
+    public String getActualResult() { return actualResult; }
+    public String getComments() { return comments; }
 }

@@ -12,4 +12,9 @@ import java.util.Map;
 @AllArgsConstructor
 public class BugsBySeverityDto {
     private Map<Severity, Long> bugsBySeverity;
+
+    // Explicit All-Arguments Constructor
+    public BugsBySeverityDto(Map<Severity, Long> bugsBySeverity) {
+        this.bugsBySeverity = bugsBySeverity;
+    }
 }

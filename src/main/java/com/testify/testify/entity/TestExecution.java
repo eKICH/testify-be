@@ -44,4 +44,26 @@ public class TestExecution {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    // Explicit Getters and Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public TestRun getTestRun() { return testRun; }
+    public void setTestRun(TestRun testRun) { this.testRun = testRun; }
+    public TestCase getTestCase() { return testCase; }
+    public void setTestCase(TestCase testCase) { this.testCase = testCase; }
+    public ExecutionStatus getStatus() { return status; }
+    public void setStatus(ExecutionStatus status) { this.status = status; }
+    public String getActualResult() { return actualResult; }
+    public void setActualResult(String actualResult) { this.actualResult = actualResult; }
+    public String getComments() { return comments; }
+    public void setComments(String comments) { this.comments = comments; }
+    public User getExecutedBy() { return executedBy; }
+    public void setExecutedBy(User executedBy) { this.executedBy = executedBy; }
+    public LocalDateTime getExecutedAt() { return executedAt; }
+    public void setExecutedAt(LocalDateTime executedAt) { this.executedAt = executedAt; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }

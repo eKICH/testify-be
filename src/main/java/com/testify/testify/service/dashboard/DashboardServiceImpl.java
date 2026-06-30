@@ -8,16 +8,13 @@ import com.testify.testify.entity.BugStatus;
 import com.testify.testify.entity.Severity;
 import com.testify.testify.entity.TestRunStatus;
 import com.testify.testify.repository.*;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class DashboardServiceImpl implements DashboardService {
 
     private final TestCaseRepository testCaseRepository;
@@ -25,6 +22,14 @@ public class DashboardServiceImpl implements DashboardService {
     private final TestRunRepository testRunRepository;
     private final BugRepository bugRepository;
     private final UserRepository userRepository;
+
+    public DashboardServiceImpl(TestCaseRepository testCaseRepository, TestPlanRepository testPlanRepository, TestRunRepository testRunRepository, BugRepository bugRepository, UserRepository userRepository) {
+        this.testCaseRepository = testCaseRepository;
+        this.testPlanRepository = testPlanRepository;
+        this.testRunRepository = testRunRepository;
+        this.bugRepository = bugRepository;
+        this.userRepository = userRepository;
+    }
 
     @Override
     public DashboardSummaryDto getDashboardSummary() {

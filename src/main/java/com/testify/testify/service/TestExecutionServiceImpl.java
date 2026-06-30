@@ -12,15 +12,14 @@ import com.testify.testify.repository.TestCaseRepository;
 import com.testify.testify.repository.TestExecutionRepository;
 import com.testify.testify.repository.TestRunRepository;
 import com.testify.testify.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class TestExecutionServiceImpl implements TestExecutionService {
 
     private final TestExecutionRepository testExecutionRepository;
@@ -29,8 +28,16 @@ public class TestExecutionServiceImpl implements TestExecutionService {
     private final UserRepository userRepository;
     private final TestExecutionMapper testExecutionMapper;
 
+    public TestExecutionServiceImpl(TestExecutionRepository testExecutionRepository, TestRunRepository testRunRepository, TestCaseRepository testCaseRepository, UserRepository userRepository, TestExecutionMapper testExecutionMapper) {
+        this.testExecutionRepository = testExecutionRepository;
+        this.testRunRepository = testRunRepository;
+        this.testCaseRepository = testCaseRepository;
+        this.userRepository = userRepository;
+        this.testExecutionMapper = testExecutionMapper;
+    }
+
     @Override
-    public TestExecutionResponse recordTestExecution(Long testRunId, TestExecutionRequest request, Long userId) {
+    public TestExecutionResponse recordTestExecution(Long testRunId, TestExecutionRequest request, UUID userId) {
         TestRun testRun = testRunRepository.findById(testRunId)
                 .orElseThrow(() -> new ResourceNotFoundException("Test Run not found with id: " + testRunId));
 
@@ -54,7 +61,7 @@ public class TestExecutionServiceImpl implements TestExecutionService {
     }
 
     @Override
-    public TestExecutionResponse updateTestExecution(Long id, TestExecutionRequest request, Long userId) {
+    public TestExecutionResponse updateTestExecution(Long id, TestExecutionRequest request, UUID userId) {
         TestExecution testExecution = testExecutionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Test Execution not found with id: " + id));
 
@@ -73,9 +80,9 @@ public class TestExecutionServiceImpl implements TestExecutionService {
 
     @Override
     public Page<TestExecutionResponse> getExecutionsByTestRun(Long runId, Pageable pageable) {
-        TestRun testRun = testRunRepository.findById(runId)
+        testRunRepository.findById(runId)
                 .orElseThrow(() -> new ResourceNotFoundException("Test Run not found with id: " + runId));
-        return testExecutionRepository.findAll(pageable)
+        return testExecutionRepository.findByTestRunId(runId, pageable)
                 .map(testExecutionMapper::toTestExecutionResponse);
     }
 }

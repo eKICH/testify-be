@@ -54,4 +54,101 @@ public class TestPlan {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    // Explicit Getters and Setters to resolve "Cannot resolve method" errors if Lombok processing is not picked up
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getScope() {
+        return scope;
+    }
+
+    public void setScope(String scope) {
+        this.scope = scope;
+    }
+
+    public LocalDate getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(LocalDate startDate) {
+        this.startDate = startDate;
+    }
+
+    public LocalDate getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(LocalDate endDate) {
+        this.endDate = endDate;
+    }
+
+    public TestPlanStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(TestPlanStatus status) {
+        this.status = status;
+    }
+
+    public User getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(User createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public Set<TestCase> getTestCases() {
+        return testCases;
+    }
+
+    public void setTestCases(Set<TestCase> testCases) {
+        this.testCases = testCases;
+    }
+
+    public Set<TestRun> getTestRuns() {
+        return testRuns;
+    }
+
+    public void setTestRuns(Set<TestRun> testRuns) {
+        this.testRuns = testRuns;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 }

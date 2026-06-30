@@ -11,13 +11,13 @@ import com.testify.testify.mapper.TestRunMapper;
 import com.testify.testify.repository.TestPlanRepository;
 import com.testify.testify.repository.TestRunRepository;
 import com.testify.testify.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
-@RequiredArgsConstructor
 public class TestRunServiceImpl implements TestRunService {
 
     private final TestRunRepository testRunRepository;
@@ -25,8 +25,15 @@ public class TestRunServiceImpl implements TestRunService {
     private final TestPlanRepository testPlanRepository;
     private final TestRunMapper testRunMapper;
 
+    public TestRunServiceImpl(TestRunRepository testRunRepository, UserRepository userRepository, TestPlanRepository testPlanRepository, TestRunMapper testRunMapper) {
+        this.testRunRepository = testRunRepository;
+        this.userRepository = userRepository;
+        this.testPlanRepository = testPlanRepository;
+        this.testRunMapper = testRunMapper;
+    }
+
     @Override
-    public TestRunResponse createTestRun(TestRunCreateRequest request, Long userId) {
+    public TestRunResponse createTestRun(TestRunCreateRequest request, UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
@@ -56,18 +63,18 @@ public class TestRunServiceImpl implements TestRunService {
 
     @Override
     public Page<TestRunResponse> getTestRunsByTestPlan(Long planId, Pageable pageable) {
-        TestPlan testPlan = testPlanRepository.findById(planId)
+        testPlanRepository.findById(planId)
                 .orElseThrow(() -> new ResourceNotFoundException("Test Plan not found with id: " + planId));
-        return testRunRepository.findAll(pageable)
+        return testRunRepository.findByTestPlanId(planId, pageable)
                 .map(testRunMapper::toTestRunResponse);
     }
 
     @Override
-    public TestRunResponse updateTestRun(Long id, TestRunCreateRequest request, Long userId) {
+    public TestRunResponse updateTestRun(Long id, TestRunCreateRequest request, UUID userId) {
         TestRun testRun = testRunRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Test Run not found with id: " + id));
 
-        User user = userRepository.findById(userId)
+        userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
         TestPlan testPlan = testPlanRepository.findById(request.getTestPlanId())

@@ -10,4 +10,10 @@ import lombok.NoArgsConstructor;
 public class UserStatisticsDto {
     private long totalUsers;
     private long newUsersToday;
+
+    // Explicit All-Arguments Constructor
+    public UserStatisticsDto(long totalUsers, long newUsersToday) {
+        this.totalUsers = totalUsers;
+        this.newUsersToday = newUsersToday;
+    }
 }
