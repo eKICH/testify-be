@@ -12,9 +12,4 @@ import java.util.Map;
 @AllArgsConstructor
 public class TestRunsByStatusDto {
     private Map<TestRunStatus, Long> testRunsByStatus;
-
-    // Explicit All-Arguments Constructor
-    public TestRunsByStatusDto(Map<TestRunStatus, Long> testRunsByStatus) {
-        this.testRunsByStatus = testRunsByStatus;
-    }
 }
