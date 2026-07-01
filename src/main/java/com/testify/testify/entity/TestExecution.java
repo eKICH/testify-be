@@ -8,6 +8,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "test_executions")
@@ -17,7 +18,7 @@ import java.time.LocalDateTime;
 public class TestExecution {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private UUID id;
 
     @ManyToOne
     @JoinColumn(name = "test_run_id", nullable = false)
@@ -46,8 +47,8 @@ public class TestExecution {
     private LocalDateTime updatedAt;
 
     // Explicit Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
     public TestRun getTestRun() { return testRun; }
     public void setTestRun(TestRun testRun) { this.testRun = testRun; }
     public TestCase getTestCase() { return testCase; }
