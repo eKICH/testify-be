@@ -3,11 +3,13 @@ package com.testify.testify.controller;
 import com.testify.testify.dto.TestRunCreateRequest;
 import com.testify.testify.dto.TestRunResponse;
 import com.testify.testify.entity.TestRunStatus;
+import com.testify.testify.security.UserPrincipal;
 import com.testify.testify.service.TestRunService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -23,9 +25,8 @@ public class TestRunController {
     }
 
     @PostMapping
-    public ResponseEntity<TestRunResponse> createTestRun(@RequestBody TestRunCreateRequest request) {
-        // Assuming the user ID is retrieved from the security context
-        UUID userId = UUID.randomUUID(); // Placeholder
+    public ResponseEntity<TestRunResponse> createTestRun(@RequestBody TestRunCreateRequest request, @AuthenticationPrincipal UserPrincipal principal) {
+        UUID userId = principal.getId();
         TestRunResponse response = testRunService.createTestRun(request, userId);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -43,9 +44,9 @@ public class TestRunController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TestRunResponse> updateTestRun(@PathVariable Long id, @RequestBody TestRunCreateRequest request) {
-        // Assuming the user ID is retrieved from the security context
-        UUID userId = UUID.randomUUID(); // Placeholder
+    public ResponseEntity<TestRunResponse> updateTestRun(@PathVariable Long id, @RequestBody TestRunCreateRequest request,
+                                                     @AuthenticationPrincipal UserPrincipal principal) {
+        UUID userId = principal.getId();
         TestRunResponse response = testRunService.updateTestRun(id, request, userId);
         return ResponseEntity.ok(response);
     }

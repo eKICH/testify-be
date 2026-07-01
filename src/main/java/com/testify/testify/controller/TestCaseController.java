@@ -3,11 +3,13 @@ package com.testify.testify.controller;
 import com.testify.testify.dto.TestCaseCreateRequest;
 import com.testify.testify.dto.TestCaseResponse;
 import com.testify.testify.service.TestCaseService;
+import com.testify.testify.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,17 +23,17 @@ public class TestCaseController {
     private final TestCaseService testCaseService;
 
     @PostMapping
-    public ResponseEntity<TestCaseResponse> createTestCase(@RequestBody TestCaseCreateRequest request) {
-        // Assuming the user ID is retrieved from the security context
-        UUID userId = UUID.randomUUID(); // Placeholder
+    public ResponseEntity<TestCaseResponse> createTestCase(@RequestBody TestCaseCreateRequest request,
+                                                       @AuthenticationPrincipal UserPrincipal principal) {
+        UUID userId = principal.getId();
         TestCaseResponse response = testCaseService.createTestCase(request, userId);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @PostMapping("/bulk-create")
-    public ResponseEntity<List<TestCaseResponse>> createBulkTestCases(@RequestBody List<TestCaseCreateRequest> requests) {
-        // Assuming the user ID is retrieved from the security context
-        UUID userId = UUID.randomUUID(); // Placeholder
+    public ResponseEntity<List<TestCaseResponse>> createBulkTestCases(@RequestBody List<TestCaseCreateRequest> requests,
+                                                                @AuthenticationPrincipal UserPrincipal principal) {
+        UUID userId = principal.getId();
         List<TestCaseResponse> responses = testCaseService.createBulkTestCases(requests, userId);
         return new ResponseEntity<>(responses, HttpStatus.CREATED);
     }
@@ -49,17 +51,16 @@ public class TestCaseController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TestCaseResponse> updateTestCase(@PathVariable Long id, @RequestBody TestCaseCreateRequest request) {
-        // Assuming the user ID is retrieved from the security context
-        UUID userId = UUID.randomUUID(); // Placeholder
+    public ResponseEntity<TestCaseResponse> updateTestCase(@PathVariable Long id, @RequestBody TestCaseCreateRequest request,
+                                                       @AuthenticationPrincipal UserPrincipal principal) {
+        UUID userId = principal.getId();
         TestCaseResponse response = testCaseService.updateTestCase(id, request, userId);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTestCase(@PathVariable Long id) {
-        // Assuming the user ID is retrieved from the security context
-        UUID userId = UUID.randomUUID(); // Placeholder
+    public ResponseEntity<Void> deleteTestCase(@PathVariable Long id, @AuthenticationPrincipal UserPrincipal principal) {
+        UUID userId = principal.getId();
         testCaseService.deleteTestCase(id, userId);
         return ResponseEntity.noContent().build();
     }

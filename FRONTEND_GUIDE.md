@@ -26,12 +26,26 @@ The API uses JWT (JSON Web Tokens) for authentication. All requests to protected
 
 ### Authentication Endpoints
 
-While the backend is configured, the specific `/api/v1/auth/` endpoints for registration and login have not been implemented yet. For now, you can use the in-memory user for testing protected endpoints via Basic Auth in tools like Postman or Insomnia.
+| Method | Endpoint                  | Description                                      | Auth required |
+|--------|----------------------------|---------------------------------------------------|----------------|
+| POST   | `/api/v1/auth/register`    | Register a new user. Returns tokens + user.        | No             |
+| POST   | `/api/v1/auth/login`       | Log in with username + password. Returns tokens.   | No             |
+| POST   | `/api/v1/auth/refresh`     | Exchange a refresh token for a new access token.   | No             |
+| POST   | `/api/v1/auth/logout`      | Stateless no-op; client discards its tokens.       | No             |
+| GET    | `/api/v1/auth/me`          | Returns the currently authenticated user.          | Yes            |
 
-*   **Username:** `user`
-*   **Password:** `password`
+**Register / Login response shape:**
+```json
+{
+  "accessToken": "eyJ...",
+  "refreshToken": "eyJ...",
+  "tokenType": "Bearer",
+  "expiresIn": 86400,
+  "user": { "id": "...", "username": "...", "firstName": "...", "lastName": "..." }
+}
+```
 
-The full JWT-based authentication flow will be implemented in a future step.
+All other `/api/v1/**` endpoints now require a valid access token in the `Authorization: Bearer <token>` header; requests without one receive a `401 Unauthorized` JSON body.
 
 ---
 

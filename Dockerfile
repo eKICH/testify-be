@@ -50,7 +50,7 @@ EXPOSE 8080
 # Health check for Render
 # Render uses this to determine if service is healthy
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:8080/testify/actuator/health || exit 1
+    CMD curl -f http://localhost:8080/actuator/health || exit 1
 
 # JVM configuration optimized for Render's limited resources
 # -Xmx256m: Maximum heap size (Render free tier has limited memory)
