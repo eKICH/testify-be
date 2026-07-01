@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "test_plans")
@@ -20,7 +21,7 @@ import java.util.Set;
 public class TestPlan {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private UUID id;
 
     @Column(nullable = false)
     private String name;
@@ -56,11 +57,11 @@ public class TestPlan {
     private LocalDateTime updatedAt;
 
     // Explicit Getters and Setters to resolve "Cannot resolve method" errors if Lombok processing is not picked up
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
