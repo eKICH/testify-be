@@ -13,8 +13,8 @@ import java.util.UUID;
 @AllArgsConstructor
 public class TestExecutionResponse {
     private UUID id;
-    private Long testRunId;
-    private Long testCaseId;
+    private UUID testRunId;
+    private UUID testCaseId;
     private ExecutionStatus status;
     private String actualResult;
     private String comments;
