@@ -29,7 +29,6 @@ public class TestCaseServiceImpl implements TestCaseService {
         Module module = moduleRepository.findById(request.getModuleId())
                 .orElseThrow(() -> new EntityNotFoundException("Module not found with ID: " + request.getModuleId()));
 
-        // In a real app, you would get the current user from the security context
         User currentUser = userRepository.findByUsername("admin")
                 .orElseThrow(() -> new EntityNotFoundException("Default 'admin' user not found."));
 
@@ -41,8 +40,6 @@ public class TestCaseServiceImpl implements TestCaseService {
         newTestCase.setExpectedResult(request.getExpectedResult());
         newTestCase.setPriority(request.getPriority());
         newTestCase.setStatus(request.getStatus());
-
-        // Associate the test case with the module
         newTestCase.setModule(module);
         newTestCase.setCreatedBy(currentUser);
 
@@ -65,7 +62,6 @@ public class TestCaseServiceImpl implements TestCaseService {
     @Override
     public TestCase updateTestCase(UUID id, TestCase testCaseDetails) {
         TestCase existingTestCase = getTestCase(id);
-        // Note: This is a simple update. A more robust implementation would use a DTO.
         existingTestCase.setName(testCaseDetails.getName());
         existingTestCase.setDescription(testCaseDetails.getDescription());
         existingTestCase.setPreconditions(testCaseDetails.getPreconditions());

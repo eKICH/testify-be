@@ -18,7 +18,7 @@ public interface TestCaseMapper {
 
     @Mapping(source = "module.id", target = "moduleId")
     @Mapping(source = "createdBy.id", target = "createdById")
-    TestCaseResponse entityToResponse(TestCase testCase);
+    TestCaseResponse toTestCaseResponse(TestCase testCase);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "module", ignore = true)
