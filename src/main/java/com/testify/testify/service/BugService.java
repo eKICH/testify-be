@@ -17,5 +17,6 @@ public interface BugService {
     BugResponse updateBugStatus(Long id, BugStatus status);
     BugResponse assignBug(Long id, UUID assigneeId);
     Page<BugResponse> getBugsByTestRun(Long runId, Pageable pageable);
-    Page<BugResponse> getBugsByTestCase(Long caseId, Pageable pageable);
+    Page<BugResponse> getBugsByTestCase(UUID caseId, Pageable pageable); // Changed Long to UUID
 }
+
