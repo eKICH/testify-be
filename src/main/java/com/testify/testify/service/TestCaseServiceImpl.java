@@ -73,4 +73,14 @@ public class TestCaseServiceImpl implements TestCaseService {
         existingTestCase.setExpectedResult(testCaseDetails.getExpectedResult());
         existingTestCase.setPriority(testCaseDetails.getPriority());
         existingTestCase.setStatus(testCaseDetails.getStatus());
-        return testC
+        return testCaseRepository.save(existingTestCase);
+    }
+
+    @Override
+    public void deleteTestCase(UUID id) {
+        if (!testCaseRepository.existsById(id)) {
+            throw new EntityNotFoundException("TestCase not found with ID: " + id);
+        }
+        testCaseRepository.deleteById(id);
+    }
+}
