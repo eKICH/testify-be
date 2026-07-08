@@ -159,7 +159,7 @@ public class BugServiceImpl implements BugService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<BugResponse> getBugsByTestCase(Long caseId, Pageable pageable) {
+    public Page<BugResponse> getBugsByTestCase(UUID caseId, Pageable pageable) {
         TestCase testCase = testCaseRepository.findById(caseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Test Case not found with id: " + caseId));
         return bugRepository.findByTestCase(testCase, pageable)

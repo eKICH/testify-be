@@ -105,7 +105,7 @@ public class TestPlanServiceImpl implements TestPlanService {
 
     @Override
     @Transactional
-    public void addTestCaseToTestPlan(Long planId, Long caseId, UUID userId) {
+    public void addTestCaseToTestPlan(Long planId, UUID caseId, UUID userId) {
         TestPlan testPlan = testPlanRepository.findById(planId)
                 .orElseThrow(() -> new ResourceNotFoundException("Test Plan not found with id: " + planId));
         TestCase testCase = testCaseRepository.findById(caseId)
@@ -122,7 +122,7 @@ public class TestPlanServiceImpl implements TestPlanService {
 
     @Override
     @Transactional
-    public void removeTestCaseFromTestPlan(Long planId, Long caseId, UUID userId) {
+    public void removeTestCaseFromTestPlan(Long planId, UUID caseId, UUID userId) {
         TestPlan testPlan = testPlanRepository.findById(planId)
                 .orElseThrow(() -> new ResourceNotFoundException("Test Plan not found with id: " + planId));
         TestCase testCase = testCaseRepository.findById(caseId)
