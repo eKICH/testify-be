@@ -2,8 +2,10 @@ package com.testify.testify.mapper;
 
 import com.testify.testify.dto.ApplicationResponse;
 import com.testify.testify.dto.ModuleResponse;
+import com.testify.testify.dto.TestCaseResponse;
 import com.testify.testify.entity.Application;
 import com.testify.testify.entity.Module;
+import com.testify.testify.entity.TestCase;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -22,4 +24,11 @@ public interface DtoMapper {
     @Mapping(source = "application.id", target = "applicationId")
     @Mapping(source = "parentModule.id", target = "parentModuleId")
     ModuleResponse toResponse(Module module);
+
+    /**
+     * Maps a TestCase entity to a TestCaseResponse DTO.
+     */
+    @Mapping(source = "module.id", target = "moduleId")
+    @Mapping(source = "createdBy.id", target = "createdById")
+    TestCaseResponse toResponse(TestCase testCase);
 }
