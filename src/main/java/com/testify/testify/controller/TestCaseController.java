@@ -2,18 +2,17 @@ package com.testify.testify.controller;
 
 import com.testify.testify.dto.TestCaseCreateRequest;
 import com.testify.testify.dto.TestCaseResponse;
-import com.testify.testify.entity.TestCase;
-import com.testify.testify.mapper.DtoMapper;
 import com.testify.testify.service.TestCaseService;
-import jakarta.validation.Valid;
+import com.testify.testify.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/test-cases")
@@ -21,48 +20,53 @@ import java.util.stream.Collectors;
 public class TestCaseController {
 
     private final TestCaseService testCaseService;
-    private final DtoMapper mapper;
 
     @PostMapping
-    public ResponseEntity<TestCaseResponse> createTestCase(@Valid @RequestBody TestCaseCreateRequest request) {
-        TestCase newTestCase = testCaseService.createTestCase(request);
-        return new ResponseEntity<>(mapper.toResponse(newTestCase), HttpStatus.CREATED);
+    public ResponseEntity<TestCaseResponse> createTestCase(@RequestBody TestCaseCreateRequest request,
+                                                       @AuthenticationPrincipal UserPrincipal principal) {
+        Long userId = principal.getId();
+        TestCaseResponse response = testCaseService.createTestCase(request, userId);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/bulk-create")
+    public ResponseEntity<List<TestCaseResponse>> createBulkTestCases(@RequestBody List<TestCaseCreateRequest> requests,
+                                                                @AuthenticationPrincipal UserPrincipal principal) {
+        Long userId = principal.getId();
+        List<TestCaseResponse> responses = testCaseService.createBulkTestCases(requests, userId);
+        return new ResponseEntity<>(responses, HttpStatus.CREATED);
     }
 
     @GetMapping
-    public ResponseEntity<List<TestCaseResponse>> getAllTestCases() {
-        List<TestCaseResponse> responses = testCaseService.getAllTestCases().stream()
-                .map(mapper::toResponse)
-                .collect(Collectors.toList());
+    public ResponseEntity<Page<TestCaseResponse>> getAllTestCases(Pageable pageable) {
+        Page<TestCaseResponse> responses = testCaseService.getAllTestCases(pageable);
         return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TestCaseResponse> getTestCaseById(@PathVariable UUID id) {
-        TestCase testCase = testCaseService.getTestCase(id);
-        return ResponseEntity.ok(mapper.toResponse(testCase));
+    public ResponseEntity<TestCaseResponse> getTestCaseById(@PathVariable Long id) {
+        TestCaseResponse response = testCaseService.getTestCaseById(id);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TestCaseResponse> updateTestCase(@PathVariable UUID id, @Valid @RequestBody TestCaseCreateRequest request) {
-        // Note: This reuses the create request DTO. For more complex updates, a dedicated update DTO might be better.
-        // We'll create a temporary TestCase object to pass to the existing update service method.
-        TestCase testCaseDetails = new TestCase();
-        testCaseDetails.setName(request.getName());
-        testCaseDetails.setDescription(request.getDescription());
-        testCaseDetails.setPreconditions(request.getPreconditions());
-        testCaseDetails.setSteps(request.getSteps());
-        testCaseDetails.setExpectedResult(request.getExpectedResult());
-        testCaseDetails.setPriority(request.getPriority());
-        testCaseDetails.setStatus(request.getStatus());
-
-        TestCase updatedTestCase = testCaseService.updateTestCase(id, testCaseDetails);
-        return ResponseEntity.ok(mapper.toResponse(updatedTestCase));
+    public ResponseEntity<TestCaseResponse> updateTestCase(@PathVariable Long id, @RequestBody TestCaseCreateRequest request,
+                                                       @AuthenticationPrincipal UserPrincipal principal) {
+        Long userId = principal.getId();
+        TestCaseResponse response = testCaseService.updateTestCase(id, request, userId);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTestCase(@PathVariable UUID id) {
-        testCaseService.deleteTestCase(id);
+    public ResponseEntity<Void> deleteTestCase(@PathVariable Long id, @AuthenticationPrincipal UserPrincipal principal) {
+        Long userId = principal.getId();
+        testCaseService.deleteTestCase(id, userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/suite/{suiteId}")
+    public ResponseEntity<Page<TestCaseResponse>> getTestCasesByTestSuite(@PathVariable Long suiteId, Pageable pageable) {
+        Page<TestCaseResponse> responses = testCaseService.getTestCasesByTestSuite(suiteId, pageable);
+        return ResponseEntity.ok(responses);
     }
 }

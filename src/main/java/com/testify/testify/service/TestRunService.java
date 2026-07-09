@@ -6,14 +6,13 @@ import com.testify.testify.entity.TestRunStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.UUID;
 
 public interface TestRunService {
-    TestRunResponse createTestRun(TestRunCreateRequest request, UUID userId);
+    TestRunResponse createTestRun(TestRunCreateRequest request, Long userId);
     TestRunResponse getTestRunById(Long id);
     Page<TestRunResponse> getAllTestRuns(Pageable pageable);
     Page<TestRunResponse> getTestRunsByTestPlan(Long planId, Pageable pageable);
-    TestRunResponse updateTestRun(Long id, TestRunCreateRequest request, UUID userId);
+    TestRunResponse updateTestRun(Long id, TestRunCreateRequest request, Long userId);
     void deleteTestRun(Long id);
     TestRunResponse updateTestRunStatus(Long id, TestRunStatus status);
 }

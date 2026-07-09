@@ -3,18 +3,15 @@ package com.testify.testify.controller;
 import com.testify.testify.dto.TestCaseResponse;
 import com.testify.testify.dto.TestPlanCreateRequest;
 import com.testify.testify.dto.TestPlanResponse;
-import com.testify.testify.entity.User;
-import com.testify.testify.exception.ResourceNotFoundException;
+import com.testify.testify.security.UserPrincipal;
 import com.testify.testify.service.TestPlanService;
-import com.testify.testify.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/test-plans")
@@ -22,14 +19,11 @@ import java.util.UUID;
 public class TestPlanController {
 
     private final TestPlanService testPlanService;
-    private final UserRepository userRepository;
 
     @PostMapping
-    public ResponseEntity<TestPlanResponse> createTestPlan(@RequestBody TestPlanCreateRequest request) {
-        // TEMPORARY: Hardcode user for testing
-        User user = userRepository.findByUsername("user")
-                .orElseThrow(() -> new ResourceNotFoundException("Default user 'user' not found for testing"));
-        UUID userId = user.getId();
+    public ResponseEntity<TestPlanResponse> createTestPlan(@RequestBody TestPlanCreateRequest request,
+                                                             @AuthenticationPrincipal UserPrincipal principal) {
+        Long userId = principal.getId();
         TestPlanResponse response = testPlanService.createTestPlan(request, userId);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -47,41 +41,32 @@ public class TestPlanController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TestPlanResponse> updateTestPlan(@PathVariable Long id, @RequestBody TestPlanCreateRequest request) {
-        // TEMPORARY: Hardcode user for testing
-        User user = userRepository.findByUsername("user")
-                .orElseThrow(() -> new ResourceNotFoundException("Default user 'user' not found for testing"));
-        UUID userId = user.getId();
+    public ResponseEntity<TestPlanResponse> updateTestPlan(@PathVariable Long id, @RequestBody TestPlanCreateRequest request,
+                                                             @AuthenticationPrincipal UserPrincipal principal) {
+        Long userId = principal.getId();
         TestPlanResponse response = testPlanService.updateTestPlan(id, request, userId);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTestPlan(@PathVariable Long id) {
-        // TEMPORARY: Hardcode user for testing
-        User user = userRepository.findByUsername("user")
-                .orElseThrow(() -> new ResourceNotFoundException("Default user 'user' not found for testing"));
-        UUID userId = user.getId();
+    public ResponseEntity<Void> deleteTestPlan(@PathVariable Long id, @AuthenticationPrincipal UserPrincipal principal) {
+        Long userId = principal.getId();
         testPlanService.deleteTestPlan(id, userId);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/test-cases/{caseId}")
-    public ResponseEntity<Void> addTestCaseToTestPlan(@PathVariable Long id, @PathVariable Long caseId) {
-        // TEMPORARY: Hardcode user for testing
-        User user = userRepository.findByUsername("user")
-                .orElseThrow(() -> new ResourceNotFoundException("Default user 'user' not found for testing"));
-        UUID userId = user.getId();
+    public ResponseEntity<Void> addTestCaseToTestPlan(@PathVariable Long id, @PathVariable Long caseId,
+                                                        @AuthenticationPrincipal UserPrincipal principal) {
+        Long userId = principal.getId();
         testPlanService.addTestCaseToTestPlan(id, caseId, userId);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}/test-cases/{caseId}")
-    public ResponseEntity<Void> removeTestCaseFromTestPlan(@PathVariable Long id, @PathVariable Long caseId) {
-        // TEMPORARY: Hardcode user for testing
-        User user = userRepository.findByUsername("user")
-                .orElseThrow(() -> new ResourceNotFoundException("Default user 'user' not found for testing"));
-        UUID userId = user.getId();
+    public ResponseEntity<Void> removeTestCaseFromTestPlan(@PathVariable Long id, @PathVariable Long caseId,
+                                                             @AuthenticationPrincipal UserPrincipal principal) {
+        Long userId = principal.getId();
         testPlanService.removeTestCaseFromTestPlan(id, caseId, userId);
         return ResponseEntity.noContent().build();
     }

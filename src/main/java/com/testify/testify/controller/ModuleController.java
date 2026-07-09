@@ -1,58 +1,62 @@
 package com.testify.testify.controller;
 
-import com.testify.testify.dto.ModuleRequest;
+import com.testify.testify.dto.ModuleCreateRequest;
+import com.testify.testify.dto.ModuleMoveRequest;
 import com.testify.testify.dto.ModuleResponse;
-import jakarta.validation.Valid;
-import com.testify.testify.entity.Module;
-import com.testify.testify.mapper.DtoMapper;
+import com.testify.testify.security.UserPrincipal;
 import com.testify.testify.service.ModuleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/v1/modules")
 @RequiredArgsConstructor
 public class ModuleController {
 
     private final ModuleService moduleService;
-    private final DtoMapper mapper;
 
-    @PostMapping
-    public ResponseEntity<ModuleResponse> createModule(@Valid @RequestBody ModuleRequest request) {
-        Module module = moduleService.createModule(request);
-        return new ResponseEntity<>(mapper.toResponse(module), HttpStatus.CREATED);
+    @PostMapping("/api/v1/applications/{appId}/modules")
+    public ResponseEntity<ModuleResponse> createModule(@PathVariable Long appId,
+                                                         @RequestBody ModuleCreateRequest request,
+                                                         @AuthenticationPrincipal UserPrincipal principal) {
+        ModuleResponse response = moduleService.createModule(appId, request, principal.getId());
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ModuleResponse> getModuleById(@PathVariable UUID id) {
-        Module module = moduleService.getModuleById(id);
-        return ResponseEntity.ok(mapper.toResponse(module));
+    @GetMapping("/api/v1/applications/{appId}/modules")
+    public ResponseEntity<List<ModuleResponse>> getModules(@PathVariable Long appId,
+                                                             @RequestParam(defaultValue = "false") boolean flat) {
+        List<ModuleResponse> response = flat
+                ? moduleService.getModulesFlat(appId)
+                : moduleService.getModuleTree(appId);
+        return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{id}/children")
-    public ResponseEntity<List<ModuleResponse>> getModuleChildren(@PathVariable UUID id) {
-        List<ModuleResponse> children = moduleService.getModuleChildren(id).stream()
-                .map(mapper::toResponse)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(children);
+    @GetMapping("/api/v1/modules/{id}")
+    public ResponseEntity<ModuleResponse> getModuleById(@PathVariable Long id) {
+        return ResponseEntity.ok(moduleService.getModuleById(id));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<ModuleResponse> updateModule(@PathVariable UUID id, @Valid @RequestBody ModuleRequest request) {
-        // Note: The request's parentModuleId is ignored to prevent re-parenting via this endpoint.
-        Module updatedModule = moduleService.updateModule(id, request.getName(), request.getDescription());
-        return ResponseEntity.ok(mapper.toResponse(updatedModule));
+    @PutMapping("/api/v1/modules/{id}")
+    public ResponseEntity<ModuleResponse> updateModule(@PathVariable Long id,
+                                                         @RequestBody ModuleCreateRequest request) {
+        return ResponseEntity.ok(moduleService.updateModule(id, request));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteModule(@PathVariable UUID id) {
-        moduleService.deleteModule(id);
+    @PatchMapping("/api/v1/modules/{id}/move")
+    public ResponseEntity<ModuleResponse> moveModule(@PathVariable Long id,
+                                                       @RequestBody ModuleMoveRequest request) {
+        return ResponseEntity.ok(moduleService.moveModule(id, request.getNewParentModuleId()));
+    }
+
+    @DeleteMapping("/api/v1/modules/{id}")
+    public ResponseEntity<Void> deleteModule(@PathVariable Long id,
+                                              @RequestParam(defaultValue = "false") boolean cascade) {
+        moduleService.deleteModule(id, cascade);
         return ResponseEntity.noContent().build();
     }
 }

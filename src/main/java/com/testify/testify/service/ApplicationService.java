@@ -1,22 +1,14 @@
 package com.testify.testify.service;
 
-import com.testify.testify.entity.Application;
+import com.testify.testify.dto.ApplicationCreateRequest;
+import com.testify.testify.dto.ApplicationResponse;
 
 import java.util.List;
-import java.util.UUID;
 
-/**
- * Service interface for managing Application entities.
- */
 public interface ApplicationService {
-
-    Application createApplication(String name, String description);
-
-    Application getApplicationById(UUID id);
-
-    List<Application> getAllApplications();
-
-    Application updateApplication(UUID id, String name, String description);
-
-    void deleteApplication(UUID id);
+    ApplicationResponse createApplication(ApplicationCreateRequest request, Long userId);
+    ApplicationResponse getApplicationById(Long id);
+    List<ApplicationResponse> getAllApplications();
+    ApplicationResponse updateApplication(Long id, ApplicationCreateRequest request);
+    void deleteApplication(Long id, boolean cascade);
 }

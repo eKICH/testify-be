@@ -1,28 +1,23 @@
 package com.testify.testify.service;
 
-import com.testify.testify.entity.Module;
-import com.testify.testify.dto.ModuleRequest;
+import com.testify.testify.dto.ModuleCreateRequest;
+import com.testify.testify.dto.ModuleResponse;
 
 import java.util.List;
-import java.util.UUID;
 
-/**
- * Service interface for managing Module entities and their hierarchical structure.
- */
 public interface ModuleService {
+    ModuleResponse createModule(Long applicationId, ModuleCreateRequest request, Long userId);
+    ModuleResponse getModuleById(Long id);
 
-    /**
-     * Creates a new module from a request object.
-     * @param request The request containing module details.
-     * @return The newly created Module entity.
-     */
-    Module createModule(ModuleRequest request);
+    /** Top-level tree (children nested) for an application. */
+    List<ModuleResponse> getModuleTree(Long applicationId);
 
-    Module getModuleById(UUID id);
+    /** Flat list (no children populated) for an application - cheaper for dropdowns/breadcrumbs. */
+    List<ModuleResponse> getModulesFlat(Long applicationId);
 
-    List<Module> getModuleChildren(UUID moduleId);
+    ModuleResponse updateModule(Long id, ModuleCreateRequest request);
+    ModuleResponse moveModule(Long id, Long newParentModuleId);
 
-    Module updateModule(UUID moduleId, String name, String description);
-
-    void deleteModule(UUID id);
+    /** cascade=true deletes the whole subtree and orphans (does not delete) any test cases in it. */
+    void deleteModule(Long id, boolean cascade);
 }

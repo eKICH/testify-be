@@ -2,14 +2,19 @@ package com.testify.testify.dto;
 
 import com.testify.testify.entity.Priority;
 import com.testify.testify.entity.TestCaseStatus;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class TestCaseResponse {
-    private UUID id;
+    private Long id;
     private String name;
     private String description;
     private String preconditions;
@@ -17,8 +22,8 @@ public class TestCaseResponse {
     private String expectedResult;
     private Priority priority;
     private TestCaseStatus status;
-    private UUID moduleId;
-    private UUID createdById;
+    private Long moduleId;
+    private UserDto createdBy;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

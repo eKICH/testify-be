@@ -9,13 +9,12 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class BugResponse {
-    private UUID id;
+    private Long id;
     private String title;
     private String description;
     private Severity severity;

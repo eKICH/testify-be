@@ -14,7 +14,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
 
 @Service
 public class TestSuiteServiceImpl implements TestSuiteService {
@@ -31,7 +30,7 @@ public class TestSuiteServiceImpl implements TestSuiteService {
 
     @Override
     @Transactional
-    public TestSuiteResponse createTestSuite(TestSuiteCreateRequest request, UUID userId) {
+    public TestSuiteResponse createTestSuite(TestSuiteCreateRequest request, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
@@ -59,7 +58,7 @@ public class TestSuiteServiceImpl implements TestSuiteService {
 
     @Override
     @Transactional
-    public TestSuiteResponse updateTestSuite(Long id, TestSuiteCreateRequest request, UUID userId) {
+    public TestSuiteResponse updateTestSuite(Long id, TestSuiteCreateRequest request, Long userId) {
         TestSuite testSuite = testSuiteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Test Suite not found with id: " + id));
 
@@ -82,7 +81,7 @@ public class TestSuiteServiceImpl implements TestSuiteService {
 
     @Override
     @Transactional
-    public void deleteTestSuite(Long id, UUID userId) {
+    public void deleteTestSuite(Long id, Long userId) {
         TestSuite testSuite = testSuiteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Test Suite not found with id: " + id));
 

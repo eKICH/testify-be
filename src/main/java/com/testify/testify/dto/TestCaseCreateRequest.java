@@ -1,24 +1,17 @@
 package com.testify.testify.dto;
 
 import com.testify.testify.entity.Priority;
-import com.testify.testify.entity.TestCaseStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.UUID;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class TestCaseCreateRequest {
-
-    @NotNull(message = "Module ID cannot be null")
-    private UUID moduleId;
-
-    @NotBlank(message = "Test case name cannot be blank")
+    @NotBlank
     private String name;
 
     private String description;
@@ -26,9 +19,21 @@ public class TestCaseCreateRequest {
     private String steps;
     private String expectedResult;
 
-    @NotNull(message = "Priority cannot be null")
+    @NotNull
     private Priority priority;
 
-    // The status can be optional on creation, defaulting in the service if needed.
-    private TestCaseStatus status;
+    private Long testSuiteId;
+
+    // New home for test cases (replaces testSuiteId - see migration checklist).
+    private Long moduleId;
+
+    // Explicit Getters
+    public String getName() { return name; }
+    public String getDescription() { return description; }
+    public String getPreconditions() { return preconditions; }
+    public String getSteps() { return steps; }
+    public String getExpectedResult() { return expectedResult; }
+    public Priority getPriority() { return priority; }
+    public Long getTestSuiteId() { return testSuiteId; }
+    public Long getModuleId() { return moduleId; }
 }

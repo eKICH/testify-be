@@ -13,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/bugs")
@@ -24,7 +23,7 @@ public class BugController {
 
     @PostMapping
     public ResponseEntity<BugResponse> createBug(@RequestBody BugCreateRequest request, @AuthenticationPrincipal UserPrincipal principal) {
-        UUID userId = principal.getId();
+        Long userId = principal.getId();
         BugResponse response = bugService.createBug(request, userId);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -44,7 +43,7 @@ public class BugController {
     @PutMapping("/{id}")
     public ResponseEntity<BugResponse> updateBug(@PathVariable Long id, @RequestBody BugCreateRequest request,
                                              @AuthenticationPrincipal UserPrincipal principal) {
-        UUID userId = principal.getId();
+        Long userId = principal.getId();
         BugResponse response = bugService.updateBug(id, request, userId);
         return ResponseEntity.ok(response);
     }
@@ -63,7 +62,7 @@ public class BugController {
     }
 
     @PutMapping("/{id}/assign/{assigneeId}")
-    public ResponseEntity<BugResponse> assignBug(@PathVariable Long id, @PathVariable UUID assigneeId) {
+    public ResponseEntity<BugResponse> assignBug(@PathVariable Long id, @PathVariable Long assigneeId) {
         BugResponse response = bugService.assignBug(id, assigneeId);
         return ResponseEntity.ok(response);
     }

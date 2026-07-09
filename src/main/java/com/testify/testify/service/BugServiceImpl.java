@@ -15,7 +15,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
 
 @Service
 public class BugServiceImpl implements BugService {
@@ -36,7 +35,7 @@ public class BugServiceImpl implements BugService {
 
     @Override
     @Transactional
-    public BugResponse createBug(BugCreateRequest request, UUID userId) {
+    public BugResponse createBug(BugCreateRequest request, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
@@ -78,7 +77,7 @@ public class BugServiceImpl implements BugService {
 
     @Override
     @Transactional
-    public BugResponse updateBug(Long id, BugCreateRequest request, UUID userId) {
+    public BugResponse updateBug(Long id, BugCreateRequest request, Long userId) {
         Bug bug = bugRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Bug not found with id: " + id));
 
@@ -138,7 +137,7 @@ public class BugServiceImpl implements BugService {
 
     @Override
     @Transactional
-    public BugResponse assignBug(Long id, UUID assigneeId) {
+    public BugResponse assignBug(Long id, Long assigneeId) {
         Bug bug = bugRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Bug not found with id: " + id));
         User assignee = userRepository.findById(assigneeId)
@@ -159,7 +158,7 @@ public class BugServiceImpl implements BugService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<BugResponse> getBugsByTestCase(UUID caseId, Pageable pageable) {
+    public Page<BugResponse> getBugsByTestCase(Long caseId, Pageable pageable) {
         TestCase testCase = testCaseRepository.findById(caseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Test Case not found with id: " + caseId));
         return bugRepository.findByTestCase(testCase, pageable)

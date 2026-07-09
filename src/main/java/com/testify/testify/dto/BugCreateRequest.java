@@ -8,7 +8,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.UUID;
 
 @Data
 @NoArgsConstructor
@@ -30,7 +29,7 @@ public class BugCreateRequest {
     private String actualBehavior;
     private String environment;
 
-    private UUID testCaseId;
+    private Long testCaseId;
     private Long testRunId;
 
     // Explicit Getters
@@ -42,6 +41,6 @@ public class BugCreateRequest {
     public String getExpectedBehavior() { return expectedBehavior; }
     public String getActualBehavior() { return actualBehavior; }
     public String getEnvironment() { return environment; }
-    public UUID getTestCaseId() { return testCaseId; }
+    public Long getTestCaseId() { return testCaseId; }
     public Long getTestRunId() { return testRunId; }
 }

@@ -1,19 +1,16 @@
 package com.testify.testify.controller;
 
-import com.testify.testify.dto.ApplicationRequest;
+import com.testify.testify.dto.ApplicationCreateRequest;
 import com.testify.testify.dto.ApplicationResponse;
-import jakarta.validation.Valid;
-import com.testify.testify.mapper.DtoMapper;
-import com.testify.testify.entity.Application;
+import com.testify.testify.security.UserPrincipal;
 import com.testify.testify.service.ApplicationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/applications")
@@ -21,37 +18,34 @@ import java.util.stream.Collectors;
 public class ApplicationController {
 
     private final ApplicationService applicationService;
-    private final DtoMapper mapper;
 
     @PostMapping
-    public ResponseEntity<ApplicationResponse> createApplication(@Valid @RequestBody ApplicationRequest request) {
-        Application application = applicationService.createApplication(request.getName(), request.getDescription());
-        return new ResponseEntity<>(mapper.toResponse(application), HttpStatus.CREATED);
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<ApplicationResponse> getApplicationById(@PathVariable UUID id) {
-        Application application = applicationService.getApplicationById(id);
-        return ResponseEntity.ok(mapper.toResponse(application));
+    public ResponseEntity<ApplicationResponse> createApplication(@RequestBody ApplicationCreateRequest request,
+                                                                   @AuthenticationPrincipal UserPrincipal principal) {
+        ApplicationResponse response = applicationService.createApplication(request, principal.getId());
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @GetMapping
     public ResponseEntity<List<ApplicationResponse>> getAllApplications() {
-        List<ApplicationResponse> responses = applicationService.getAllApplications().stream()
-                .map(mapper::toResponse)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(responses);
+        return ResponseEntity.ok(applicationService.getAllApplications());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApplicationResponse> getApplicationById(@PathVariable Long id) {
+        return ResponseEntity.ok(applicationService.getApplicationById(id));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApplicationResponse> updateApplication(@PathVariable UUID id, @Valid @RequestBody ApplicationRequest request) {
-        Application updatedApplication = applicationService.updateApplication(id, request.getName(), request.getDescription());
-        return ResponseEntity.ok(mapper.toResponse(updatedApplication));
+    public ResponseEntity<ApplicationResponse> updateApplication(@PathVariable Long id,
+                                                                   @RequestBody ApplicationCreateRequest request) {
+        return ResponseEntity.ok(applicationService.updateApplication(id, request));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteApplication(@PathVariable UUID id) {
-        applicationService.deleteApplication(id);
+    public ResponseEntity<Void> deleteApplication(@PathVariable Long id,
+                                                   @RequestParam(defaultValue = "false") boolean cascade) {
+        applicationService.deleteApplication(id, cascade);
         return ResponseEntity.noContent().build();
     }
 }

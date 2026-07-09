@@ -17,7 +17,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Service
 public class TestExecutionServiceImpl implements TestExecutionService {
@@ -37,7 +36,7 @@ public class TestExecutionServiceImpl implements TestExecutionService {
     }
 
     @Override
-    public TestExecutionResponse recordTestExecution(Long testRunId, TestExecutionRequest request, UUID userId) {
+    public TestExecutionResponse recordTestExecution(Long testRunId, TestExecutionRequest request, Long userId) {
         TestRun testRun = testRunRepository.findById(testRunId)
                 .orElseThrow(() -> new ResourceNotFoundException("Test Run not found with id: " + testRunId));
 
@@ -61,7 +60,7 @@ public class TestExecutionServiceImpl implements TestExecutionService {
     }
 
     @Override
-    public TestExecutionResponse updateTestExecution(Long id, TestExecutionRequest request, UUID userId) {
+    public TestExecutionResponse updateTestExecution(Long id, TestExecutionRequest request, Long userId) {
         TestExecution testExecution = testExecutionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Test Execution not found with id: " + id));
 

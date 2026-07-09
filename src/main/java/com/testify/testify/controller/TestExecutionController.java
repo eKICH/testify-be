@@ -12,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/test-executions")
@@ -24,7 +23,7 @@ public class TestExecutionController {
     @PostMapping("/run/{testRunId}")
     public ResponseEntity<TestExecutionResponse> recordTestExecution(@PathVariable Long testRunId, @RequestBody TestExecutionRequest request,
                                                                @AuthenticationPrincipal UserPrincipal principal) {
-        UUID userId = principal.getId();
+        Long userId = principal.getId();
         TestExecutionResponse response = testExecutionService.recordTestExecution(testRunId, request, userId);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -32,7 +31,7 @@ public class TestExecutionController {
     @PutMapping("/{id}")
     public ResponseEntity<TestExecutionResponse> updateTestExecution(@PathVariable Long id, @RequestBody TestExecutionRequest request,
                                                                @AuthenticationPrincipal UserPrincipal principal) {
-        UUID userId = principal.getId();
+        Long userId = principal.getId();
         TestExecutionResponse response = testExecutionService.updateTestExecution(id, request, userId);
         return ResponseEntity.ok(response);
     }

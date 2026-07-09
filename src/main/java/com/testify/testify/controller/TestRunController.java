@@ -12,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/test-runs")
@@ -26,7 +25,7 @@ public class TestRunController {
 
     @PostMapping
     public ResponseEntity<TestRunResponse> createTestRun(@RequestBody TestRunCreateRequest request, @AuthenticationPrincipal UserPrincipal principal) {
-        UUID userId = principal.getId();
+        Long userId = principal.getId();
         TestRunResponse response = testRunService.createTestRun(request, userId);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -46,7 +45,7 @@ public class TestRunController {
     @PutMapping("/{id}")
     public ResponseEntity<TestRunResponse> updateTestRun(@PathVariable Long id, @RequestBody TestRunCreateRequest request,
                                                      @AuthenticationPrincipal UserPrincipal principal) {
-        UUID userId = principal.getId();
+        Long userId = principal.getId();
         TestRunResponse response = testRunService.updateTestRun(id, request, userId);
         return ResponseEntity.ok(response);
     }

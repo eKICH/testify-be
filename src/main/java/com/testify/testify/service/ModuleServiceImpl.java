@@ -1,111 +1,223 @@
 package com.testify.testify.service;
 
-import com.testify.testify.dto.ModuleRequest;
+import com.testify.testify.dto.ModuleCreateRequest;
+import com.testify.testify.dto.ModuleResponse;
+import com.testify.testify.dto.UserDto;
 import com.testify.testify.entity.Application;
 import com.testify.testify.entity.Module;
 import com.testify.testify.entity.User;
+import com.testify.testify.exception.ConflictException;
+import com.testify.testify.exception.ResourceNotFoundException;
 import com.testify.testify.repository.ApplicationRepository;
 import com.testify.testify.repository.ModuleRepository;
+import com.testify.testify.repository.TestCaseRepository;
 import com.testify.testify.repository.UserRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
-import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class ModuleServiceImpl implements ModuleService {
 
     private final ModuleRepository moduleRepository;
     private final ApplicationRepository applicationRepository;
+    private final TestCaseRepository testCaseRepository;
     private final UserRepository userRepository;
 
     @Override
-    public Module createModule(ModuleRequest request) {
-        Application application = applicationRepository.findById(request.getApplicationId())
-                .orElseThrow(() -> new EntityNotFoundException("Application not found with ID: " + request.getApplicationId()));
+    @Transactional
+    public ModuleResponse createModule(Long applicationId, ModuleCreateRequest request, Long userId) {
+        Application application = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Application not found with id: " + applicationId));
 
-        // In a real app, you would get the current user from the security context.
-        User currentUser = userRepository.findByUsername("admin")
-                .orElseThrow(() -> new EntityNotFoundException("Default 'admin' user not found. Please ensure this user exists."));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
-        Module newModule = new Module();
-        newModule.setName(request.getName());
-        newModule.setDescription(request.getDescription());
-        newModule.setApplication(application);
-        newModule.setCreatedBy(currentUser);
-
-        String path;
-        int depth;
-
+        Module parent = null;
         if (request.getParentModuleId() != null) {
-            Module parentModule = moduleRepository.findById(request.getParentModuleId())
-                    .orElseThrow(() -> new EntityNotFoundException("Parent module not found with ID: " + request.getParentModuleId()));
-            newModule.setParentModule(parentModule);
-            path = parentModule.getPath();
-            depth = parentModule.getDepth() + 1;
-        } else {
-            // This is a root module
-            path = "/";
-            depth = 0;
+            parent = moduleRepository.findById(request.getParentModuleId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Parent module not found with id: " + request.getParentModuleId()));
+            if (!parent.getApplication().getId().equals(applicationId)) {
+                throw new IllegalArgumentException("Parent module does not belong to this application");
+            }
         }
 
-        newModule.setDepth(depth);
-        // Temporarily set path; will be updated after ID generation
-        newModule.setPath("TEMP");
+        Module module = new Module();
+        module.setName(request.getName());
+        module.setDescription(request.getDescription());
+        module.setApplication(application);
+        module.setParentModule(parent);
+        module.setDepth(parent != null ? parent.getDepth() + 1 : 0);
+        module.setCreatedBy(user);
+        module.setPath(""); // placeholder - id isn't known until after insert (see entity javadoc)
 
-        // First save to generate the ID
-        Module savedModule = moduleRepository.save(newModule);
+        // First write: IDENTITY generation forces the insert now, giving us the id.
+        Module saved = moduleRepository.save(module);
 
-        // Construct the final path with the new ID and update
-        String finalPath = path + savedModule.getId().toString() + "/";
-        savedModule.setPath(finalPath);
+        // Second write: now we can build the real path and persist it.
+        String parentPath = parent != null ? parent.getPath() : "/";
+        saved.setPath(parentPath + saved.getId() + "/");
+        saved = moduleRepository.save(saved);
 
-        // Second save to update the path
-        return moduleRepository.save(savedModule);
+        return toResponse(saved, false);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Module getModuleById(UUID id) {
-        return moduleRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Module not found with ID: " + id));
+    public ModuleResponse getModuleById(Long id) {
+        Module module = moduleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Module not found with id: " + id));
+        return toResponse(module, true);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Module> getModuleChildren(UUID moduleId) {
-        if (!moduleRepository.existsById(moduleId)) {
-            throw new EntityNotFoundException("Module not found with ID: " + moduleId);
+    public List<ModuleResponse> getModuleTree(Long applicationId) {
+        ensureApplicationExists(applicationId);
+        List<Module> topLevel = moduleRepository.findByApplicationIdAndParentModuleIsNullOrderByName(applicationId);
+        return topLevel.stream()
+                .map(this::buildTreeNode)
+                .collect(Collectors.toList());
+    }
+
+    private ModuleResponse buildTreeNode(Module module) {
+        ModuleResponse node = toResponse(module, false);
+        List<Module> children = moduleRepository.findByParentModuleIdOrderByName(module.getId());
+        node.setChildren(children.stream().map(this::buildTreeNode).collect(Collectors.toList()));
+        return node;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ModuleResponse> getModulesFlat(Long applicationId) {
+        ensureApplicationExists(applicationId);
+        return moduleRepository.findByApplicationId(applicationId).stream()
+                .sorted(Comparator.comparing(Module::getPath))
+                .map(m -> toResponse(m, false))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public ModuleResponse updateModule(Long id, ModuleCreateRequest request) {
+        // Name/description only - moving to a different parent goes through
+        // moveModule(), which handles the path/depth rewrite and cycle check.
+        Module module = moduleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Module not found with id: " + id));
+
+        module.setName(request.getName());
+        module.setDescription(request.getDescription());
+
+        Module saved = moduleRepository.save(module);
+        return toResponse(saved, true);
+    }
+
+    @Override
+    @Transactional
+    public ModuleResponse moveModule(Long id, Long newParentModuleId) {
+        Module module = moduleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Module not found with id: " + id));
+
+        Module newParent = null;
+        if (newParentModuleId != null) {
+            if (newParentModuleId.equals(id)) {
+                throw new IllegalArgumentException("A module cannot be moved into itself");
+            }
+            newParent = moduleRepository.findById(newParentModuleId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Target parent module not found with id: " + newParentModuleId));
+
+            if (!newParent.getApplication().getId().equals(module.getApplication().getId())) {
+                throw new IllegalArgumentException("Cannot move a module to a different application");
+            }
+            if (newParent.getPath().startsWith(module.getPath())) {
+                throw new IllegalArgumentException("Cannot move a module into one of its own descendants");
+            }
         }
-        return moduleRepository.findByParentModuleId(moduleId);
+
+        String oldPathPrefix = module.getPath();
+        int oldDepth = module.getDepth();
+
+        String newParentPath = newParent != null ? newParent.getPath() : "/";
+        int newDepth = newParent != null ? newParent.getDepth() + 1 : 0;
+        String newPath = newParentPath + module.getId() + "/";
+        int depthDelta = newDepth - oldDepth;
+
+        List<Module> subtree = moduleRepository.findSubtree(oldPathPrefix);
+        for (Module m : subtree) {
+            String suffix = m.getPath().substring(oldPathPrefix.length());
+            m.setPath(newPath + suffix);
+            m.setDepth(m.getDepth() + depthDelta);
+        }
+        module.setParentModule(newParent);
+        moduleRepository.saveAll(subtree);
+
+        return toResponse(module, true);
     }
 
     @Override
-    public Module updateModule(UUID moduleId, String name, String description) {
-        Module moduleToUpdate = getModuleById(moduleId);
+    @Transactional
+    public void deleteModule(Long id, boolean cascade) {
+        Module module = moduleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Module not found with id: " + id));
 
-        moduleToUpdate.setName(name);
-        moduleToUpdate.setDescription(description);
+        List<Module> subtree = moduleRepository.findSubtree(module.getPath()); // includes module itself
+        boolean hasChildren = subtree.size() > 1;
+        long testCaseCount = testCaseRepository.countBySubtreePath(module.getPath());
 
-        return moduleRepository.save(moduleToUpdate);
+        if ((hasChildren || testCaseCount > 0) && !cascade) {
+            throw new ConflictException(
+                    "Module '" + module.getName() + "' has " +
+                    (hasChildren ? (subtree.size() - 1) + " sub-module(s)" : "") +
+                    (hasChildren && testCaseCount > 0 ? " and " : "") +
+                    (testCaseCount > 0 ? testCaseCount + " test case(s)" : "") +
+                    ". Move/delete them first, or retry with ?cascade=true.");
+        }
+
+        if (testCaseCount > 0) {
+            // Preserve test case history - detach rather than delete.
+            testCaseRepository.detachFromModules(subtree);
+        }
+
+        // Delete deepest modules first so no row still has a live child when removed.
+        subtree.sort(Comparator.comparing(Module::getDepth).reversed());
+        moduleRepository.deleteAll(subtree);
     }
 
-    @Override
-    public void deleteModule(UUID id) {
-        Module moduleToDelete = getModuleById(id);
+    private void ensureApplicationExists(Long applicationId) {
+        if (!applicationRepository.existsById(applicationId)) {
+            throw new ResourceNotFoundException("Application not found with id: " + applicationId);
+        }
+    }
 
-        // Find all descendants (including the module itself) using the path
-        List<Module> modulesToDelete = moduleRepository.findByPathStartingWith(moduleToDelete.getPath());
+    private ModuleResponse toResponse(Module module, boolean includeDirectChildren) {
+        ModuleResponse response = new ModuleResponse();
+        response.setId(module.getId());
+        response.setName(module.getName());
+        response.setDescription(module.getDescription());
+        response.setApplicationId(module.getApplication().getId());
+        response.setParentModuleId(module.getParentModule() != null ? module.getParentModule().getId() : null);
+        response.setPath(module.getPath());
+        response.setDepth(module.getDepth());
+        response.setTestCaseCount(testCaseRepository.countBySubtreePath(module.getPath()));
 
-        // Future enhancement: Add logic here to handle TestCases within these modules.
-        // For example, you might want to delete them, or re-assign them if they can be moved.
-        // testCaseRepository.deleteByModuleIn(modulesToDelete);
+        if (module.getCreatedBy() != null) {
+            User creator = module.getCreatedBy();
+            response.setCreatedBy(new UserDto(creator.getId(), creator.getUsername(), creator.getFirstName(), creator.getLastName()));
+        }
 
-        moduleRepository.deleteAll(modulesToDelete);
+        response.setCreatedAt(module.getCreatedAt());
+        response.setUpdatedAt(module.getUpdatedAt());
+
+        if (includeDirectChildren) {
+            List<Module> children = moduleRepository.findByParentModuleIdOrderByName(module.getId());
+            response.setChildren(children.stream().map(c -> toResponse(c, false)).collect(Collectors.toList()));
+        }
+
+        return response;
     }
 }

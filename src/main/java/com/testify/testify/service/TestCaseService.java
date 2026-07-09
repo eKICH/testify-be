@@ -1,15 +1,18 @@
 package com.testify.testify.service;
 
 import com.testify.testify.dto.TestCaseCreateRequest;
-import com.testify.testify.entity.TestCase;
+import com.testify.testify.dto.TestCaseResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
-import java.util.UUID;
 
 public interface TestCaseService {
-    TestCase createTestCase(TestCaseCreateRequest request);
-    TestCase getTestCase(UUID id);
-    List<TestCase> getAllTestCases();
-    TestCase updateTestCase(UUID id, TestCase testCase);
-    void deleteTestCase(UUID id);
+    TestCaseResponse createTestCase(TestCaseCreateRequest request, Long userId);
+    List<TestCaseResponse> createBulkTestCases(List<TestCaseCreateRequest> requests, Long userId);
+    TestCaseResponse getTestCaseById(Long id);
+    Page<TestCaseResponse> getAllTestCases(Pageable pageable);
+    Page<TestCaseResponse> getTestCasesByTestSuite(Long suiteId, Pageable pageable);
+    TestCaseResponse updateTestCase(Long id, TestCaseCreateRequest request, Long userId);
+    void deleteTestCase(Long id, Long userId);
 }

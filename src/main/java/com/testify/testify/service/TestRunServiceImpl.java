@@ -15,7 +15,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
 
 @Service
 public class TestRunServiceImpl implements TestRunService {
@@ -33,7 +32,7 @@ public class TestRunServiceImpl implements TestRunService {
     }
 
     @Override
-    public TestRunResponse createTestRun(TestRunCreateRequest request, UUID userId) {
+    public TestRunResponse createTestRun(TestRunCreateRequest request, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
@@ -70,7 +69,7 @@ public class TestRunServiceImpl implements TestRunService {
     }
 
     @Override
-    public TestRunResponse updateTestRun(Long id, TestRunCreateRequest request, UUID userId) {
+    public TestRunResponse updateTestRun(Long id, TestRunCreateRequest request, Long userId) {
         TestRun testRun = testRunRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Test Run not found with id: " + id));
 
