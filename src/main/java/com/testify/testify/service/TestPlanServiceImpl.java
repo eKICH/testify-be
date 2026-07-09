@@ -1,6 +1,6 @@
 package com.testify.testify.service;
 
-import com.testify.testify.dto.TestPlanRequest;
+import com.testify.testify.dto.TestPlanCreateRequest;
 import com.testify.testify.dto.TestPlanResponse;
 import com.testify.testify.entity.TestCase;
 import com.testify.testify.entity.TestPlan;
@@ -35,7 +35,7 @@ public class TestPlanServiceImpl implements TestPlanService {
 
     @Override
     @Transactional
-    public TestPlanResponse createTestPlan(TestPlanRequest request, UUID userId) {
+    public TestPlanResponse createTestPlan(TestPlanCreateRequest request, UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
         TestPlan testPlan = testPlanMapper.toTestPlan(request);
@@ -61,7 +61,7 @@ public class TestPlanServiceImpl implements TestPlanService {
 
     @Override
     @Transactional
-    public TestPlanResponse updateTestPlan(Long id, TestPlanRequest request, UUID userId) {
+    public TestPlanResponse updateTestPlan(Long id, TestPlanCreateRequest request, UUID userId) {
         TestPlan testPlan = testPlanRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Test Plan not found with id: " + id));
 
